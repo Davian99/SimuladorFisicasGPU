@@ -3,6 +3,8 @@
 #include <math.h>
 #include <vector>
 #include <unistd.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define PI 3.121592f
 #define HEIGHT 800
@@ -10,7 +12,14 @@
 
 using namespace std;
 
-vector<pair<float, float>> circles;
+int grav = 1;
+
+vector<pair<int, int>> circles;
+
+void timer(int) {
+    glutPostRedisplay();
+    glutTimerFunc(1000/60, timer, 0);
+}
 
 void keyboard(unsigned char c, int x, int y) {
     if (c == 27) {
@@ -26,11 +35,11 @@ void to_coord(int x, int y, float &fx, float &fy){
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
     	if (state == GLUT_DOWN){
-    		float fx, fy;
-    		to_coord(x, y, fx, fy);
-    		circles.push_back({fx, fy});
-    		printf("M = (%f, %f)\n", fx, fy);
-    		glutPostRedisplay();
+    		//float fx, fy;
+    		//to_coord(x, y, fx, fy);
+    		circles.push_back({x, y});
+    		printf("M = (%d, %d)\n", x, y);
+    		//glutPostRedisplay();
     	}
         //exit(0);
     }
@@ -38,7 +47,14 @@ void mouse(int button, int state, int x, int y) {
     if ((button == 3) || (button == 4)) {
         if (state == GLUT_UP) 
        		return; // Disregard redundant GLUT_UP events
-       	printf("Scroll %s At %d %d\n", (button == 3) ? "Up" : "Down", x, y);
+        if(button == 3){
+        	grav += 1;
+        	printf("Gravedad aumentada a %d\n", grav);
+        }
+        else{
+        	grav = max(1, grav-1);
+        	printf("Gravedad disminuida a %d\n", grav);
+        }
    	}
 }
 
@@ -60,28 +76,37 @@ void DrawCircle(float cx, float cy, float r, int num_segments) {
 void render(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for(int i = 0; i < circles.size(); ++i)
-    	DrawCircle(circles[i].first, circles[i].second, to_percent(10), 360);
+    int x = rand() % WIDTH;
+    int y = rand() % HEIGHT;
+    circles.push_back({x, y});
+
+    for(int i = 0; i < circles.size(); ++i){
+    	float fx, fy;
+    	to_coord(circles[i].first, circles[i].second, fx, fy);
+    	DrawCircle(fx, fy, to_percent(10), 360);
+    	circles[i].first += 0;
+    	circles[i].second += grav;
+    }
 	//cout << circles.size() << endl;
-
-    DrawCircle(0, 0, 1, 300);
-
     glutSwapBuffers();
 }
 
 int main(int argc, char** argv) {
 
 	circles.clear();
+	srand(time(NULL));
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(WIDTH, HEIGHT);
-    glutCreateWindow("Simple GLUT Application");
+    glutCreateWindow("Test Program");
 
     glutDisplayFunc(render);       
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
+
+    glutTimerFunc(1000/60, timer, 0);
 
     glutMainLoop();
 }
