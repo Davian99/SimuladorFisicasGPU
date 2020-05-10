@@ -2,7 +2,6 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
-#include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -88,6 +87,7 @@ void render(void) {
     	circles[i].second += grav;
     }
 	//cout << circles.size() << endl;
+
     glutSwapBuffers();
 }
 
