@@ -12,7 +12,7 @@ CXXFLAGS=-O3 -I.
 
 LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
 
-SRC = test.o
+SRC = scene.o main.o
 	
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -23,8 +23,8 @@ SRC = test.o
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-test: $(SRC) 
-	$(CXX) -o test  $(SRC) $(CXXFLAGS) $(LIBS) 
+main: $(SRC) 
+	$(CXX) -o main  $(SRC) $(CXXFLAGS) $(LIBS) 
 
 clean:
-	rm -f *.o test
+	rm -f *.o main
