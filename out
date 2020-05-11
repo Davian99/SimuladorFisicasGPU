@@ -1,0 +1,31 @@
+In file included from main.h:13,
+                 from main.cpp:1:
+scene.h:12:3: error: ‘Circle’ does not name a type
+   12 |   Circle c;
+      |   ^~~~~~
+scene.cpp: In constructor ‘Scene::Scene()’:
+scene.cpp:4:14: error: no matching function for call to ‘Circle::Circle()’
+    4 | Scene::Scene(){
+      |              ^
+In file included from main.h:14,
+                 from scene.h:3,
+                 from scene.cpp:1:
+render_object.h:16:3: note: candidate: ‘Circle::Circle(int, int, int)’
+   16 |   Circle(int x, int y, int r);
+      |   ^~~~~~
+render_object.h:16:3: note:   candidate expects 3 arguments, 0 provided
+render_object.h:11:7: note: candidate: ‘constexpr Circle::Circle(const Circle&)’
+   11 | class Circle: public RenderObject {
+      |       ^~~~~~
+render_object.h:11:7: note:   candidate expects 1 argument, 0 provided
+render_object.h:11:7: note: candidate: ‘constexpr Circle::Circle(Circle&&)’
+render_object.h:11:7: note:   candidate expects 1 argument, 0 provided
+scene.cpp:6:17: error: no match for call to ‘(Circle) (int, int, int)’
+    6 |  c(100, 100, 100);
+      |                 ^
+In file included from main.h:13,
+                 from render_object.h:4,
+                 from circle.cpp:1:
+scene.h:12:3: error: ‘Circle’ does not name a type
+   12 |   Circle c;
+      |   ^~~~~~

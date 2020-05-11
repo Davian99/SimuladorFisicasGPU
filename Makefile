@@ -12,7 +12,7 @@ CXXFLAGS=-O3 -I.
 
 LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
 
-SRC = scene.o main.o
+SRC = main.o circle.o scene.o 
 	
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<

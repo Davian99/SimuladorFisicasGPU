@@ -1,64 +1,37 @@
 #include "scene.h"
 
-Scene::Scene(int argc, char** argv){
-	init_OGL(argc, argv);
-
-
-
+Scene::Scene(){
+	cir = Circle(100, 100, 100);
 }
 
-void Scene::init_OGL(int argc, char** argv){
-	glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100, 100);
-    glutInitWindowSize(WIDTH, HEIGHT);
-    glutCreateWindow("Test Program");
-
-    glutDisplayFunc(render);
-    glutKeyboardFunc(keyboard);
-    glutMouseFunc(mouse);
-    glutPassiveMotionFunc( myMouseMove);
-
-    glutTimerFunc(1000/60, timer, 0);
-
-    glutMainLoop();
+float pixels_to(float px){
+	return px / ((WIDTH + HEIGHT) / 2);
 }
 
-
-void timer(int) {
-    glutPostRedisplay();
-    glutTimerFunc(1000/fps, timer, 0);
+void coord_to(int x, int y, float &fx, float &fy){
+	fx = ((x * 2.0f) / WIDTH) - 1;
+	fy = -1.0f * (((y * 2.0f) / HEIGHT) - 1);
 }
 
-void keyboard(unsigned char c, int x, int y) {
-    return;
+void Scene::render(){
+	cir.render();
 }
 
-void mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON) {
-    	if (state == GLUT_DOWN){
-    		;
-    	}
-    }
-
-    if ((button == 3) || (button == 4)) {
-        if (state == GLUT_UP) 
-       		return; // Disregard redundant GLUT_UP events
-        if(button == 3){
-        	;//UP
-        }
-        else{
-        	;//DOWN
-        }
-   	}
+void Scene::upddate_mouse_pos(int x, int y){
+	this->mx = x;
+	this->my = y;
 }
 
-void myMouseMove(int x, int y) {
-	return;
-}
-
-void render(void) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glutSwapBuffers();
+void Scene::print_text(){
+	unsigned char ss[] = "The quick god jumps over the lazy brown fox.";
+	string sss = "The quick god jumps over the lazy brown fox.";
+	int w;
+	w = glutBitmapLength(GLUT_BITMAP_8_BY_13, ss);
+	glRasterPos2f(0., 0.);
+	float x = .5; /* Centre in the middle of the window */
+	glRasterPos2f(x - (float) WIDTH / 2, 0.);
+	glColor3ub(255, 0, 0);
+	for (int i = 0; i < sss.size(); i++) {
+    	glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ss[i]);
+	}
 }

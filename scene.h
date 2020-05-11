@@ -1,33 +1,18 @@
-#include <iostream>
-#include <math.h>
-#include <vector>
-#include <stdlib.h>
-#include <time.h>
+#pragma once
 
-#include <GL/glut.h> 
-
-#define PI 3.121592f
-#define HEIGHT 800 //Height of the window
-#define WIDTH 800 //Width of the window
-
-using namespace std;
-
-const float fps = 60;
-
-void timer(int);
-void keyboard(unsigned char c, int x, int y);
-void mouse(int button, int state, int x, int y);
-void myMouseMove( int x, int y);
-void render(void);
+#include "main.h"
+#include "render_object.h"
 
 class Scene {
 
 	private:
-		void init_OGL(int argc, char** argv);
-		
+		int mx, my;
+		void print_text();
+		Circle cir;
 
 	public:
-		Scene(int argc, char** argv);
-
-
+		Scene();
+		void render();
+		void print_x();
+		void upddate_mouse_pos(int x, int y);
 };
