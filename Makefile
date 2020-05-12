@@ -1,21 +1,12 @@
 CXX = g++
-CC = gcc
 NVCC = nvcc
 
-#OpenCV
-CXX_OPENCV_FLAGS+=`pkg-config opencv --cflags`
-LD_OPENCV_FLAGS+=`pkg-config opencv --libs`
-
-
-CFLAGS=-O3 -I. 
-CXXFLAGS=-O3 -I.
+CFLAGS=-O1 -I. 
+CXXFLAGS=-O1 -I.
 
 LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
 
-SRC = main.o circle.o scene.o 
-	
-%.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+SRC = main.o circle.o scene.o list_render_object.o
 
 %.o: %.cu
 	$(NVCC) $(CFLAGS) -c -o $@ $<
@@ -25,6 +16,7 @@ SRC = main.o circle.o scene.o
 
 main: $(SRC) 
 	$(CXX) -o main  $(SRC) $(CXXFLAGS) $(LIBS) 
+	./main
 
 clean:
 	rm -f *.o main

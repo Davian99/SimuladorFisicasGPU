@@ -2,7 +2,7 @@
 
 class RenderObject {
 	public:
-		void draw();
+		virtual void render() {;}
 };
 
 class Circle: public RenderObject {
@@ -12,5 +12,6 @@ class Circle: public RenderObject {
 	public:
 		Circle(int x, int y, int r);
 		Circle();
-		void render();
+		~Circle();
+		void render() override;
 };
