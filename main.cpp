@@ -2,6 +2,7 @@
 #include "scene.h"
 
 #define ESC_KEY 27
+#define SPC_KEY 32
 
 void timer(int);
 void keyboard(unsigned char c, int x, int y);
@@ -16,11 +17,14 @@ Scene scene;
 
 void timer(int) {
     glutPostRedisplay();
-    glutTimerFunc(dt, timer, 0);
+    glutTimerFunc(dt * 1000.0f, timer, 0);
 }
 
 void keyboard(unsigned char c, int x, int y) {
     switch(c){
+        case SPC_KEY:
+            scene.activated_physics = !scene.activated_physics;
+            break;  
         case ESC_KEY:
             exit(0);
             break;

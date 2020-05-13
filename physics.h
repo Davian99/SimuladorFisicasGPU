@@ -9,4 +9,7 @@ class Physics {
 		Physics(Scene * scene);
 		Physics(){;};
 		void step();
+		void integrateForces();
+		void integrateVelocities();
+		void clearForces();
 };

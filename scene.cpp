@@ -3,11 +3,15 @@
 Scene::Scene(){
 	this->frame_count = 0;
 	this->phy = Physics(this);
+	this->activated_physics = true;
 }
 
 void Scene::render(){
-	this->phy.step();
-	this->frame_count++;
+	if(activated_physics){
+		this->frame_count++;
+		this->phy.step();
+	}
+	
 	this->lro.renderAll();
 	this->renderDefaultText();
 }

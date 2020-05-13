@@ -13,6 +13,7 @@ class Scene {
 
 	public:
 		ListRenderObject lro;
+		bool activated_physics;
 		
 		Scene();
 		void render();
