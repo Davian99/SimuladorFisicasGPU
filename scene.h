@@ -8,10 +8,11 @@ class Scene {
 
 	private:
 		int mx, my;
-		int frame_count;
+		
 		Physics phy;
 
 	public:
+		int frame_count;
 		ListRenderObject lro;
 		bool activated_physics;
 		

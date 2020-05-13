@@ -10,7 +10,6 @@
 
 #include <GL/glut.h> 
 
-
 #define PI 3.141592f
 #define NUM_CIR_SEG 360
 #define HEIGHT 800 //Height of the window
@@ -32,3 +31,4 @@ void coordTo(int x, int y, float &fx, float &fy);
 float pixelsTo(float px);
 void glVertexC(float x, float y);
 float degToRad(float deg);
+bool save_screenshot(string filename, int w, int h);

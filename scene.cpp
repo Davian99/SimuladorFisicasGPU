@@ -11,7 +11,6 @@ void Scene::render(){
 		this->frame_count++;
 		this->phy.step();
 	}
-	
 	this->lro.renderAll();
 	this->renderDefaultText();
 }
@@ -64,4 +63,44 @@ void glVertexC(float x, float y){
 
 float degToRad(float deg){
 	return deg * PI / 180.f;
+}
+
+
+bool save_screenshot(string filename, int w, int h) {	
+  //This prevents the images getting padded 
+ // when the width multiplied by 3 is not a multiple of 4
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+  int nSize = w*h*3;
+  // First let's create our buffer, 3 channels per Pixel
+  char* dataBuffer = (char*)malloc(nSize*sizeof(char));
+
+  if (!dataBuffer) return false;
+   
+   // Let's fetch them from the backbuffer	
+   // We request the pixels in GL_BGR format, thanks to Berzeger for the tip
+   glReadPixels((GLint)0, (GLint)0,
+		(GLint)w, (GLint)h,
+		 GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
+	
+   //Now the file creation
+   string path = "/home/davian/Uni20/GPU/images/" + filename;
+   FILE *filePtr = fopen(path.c_str(), "wb");
+   if (!filePtr) return false;
+	
+   
+   unsigned char TGAheader[12]={0,0,2,0,0,0,0,0,0,0,0,0};
+   unsigned char header[6] = { w%256,w/256,
+			       h%256,h/256,
+			       24,0};
+   // We write the headers
+   fwrite(TGAheader,	sizeof(unsigned char),	12,	filePtr);
+   fwrite(header,	sizeof(unsigned char),	6,	filePtr);
+   // And finally our image data
+   fwrite(dataBuffer,	sizeof(GLubyte),	nSize,	filePtr);
+   fclose(filePtr);
+
+   free(dataBuffer);
+
+  return true;
 }

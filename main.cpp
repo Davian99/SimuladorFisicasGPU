@@ -34,6 +34,9 @@ void keyboard(unsigned char c, int x, int y) {
         case 'r':
             scene.reset();
             break;
+        case 's':
+            save_screenshot("image", WIDTH, HEIGHT);
+            break;
         default:
             break;
     }
@@ -66,6 +69,7 @@ void render(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     scene.render();
+    //save_screenshot("Frame" + to_string(scene.frame_count), WIDTH, HEIGHT) + ".tga";
     //renderString(10, 24, "HOLA");
 
     glutSwapBuffers();

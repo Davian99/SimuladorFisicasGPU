@@ -2,7 +2,7 @@ CXX = g++
 NVCC = nvcc
 
 CFLAGS=-O1 -I. 
-CXXFLAGS=-O1 -I.
+CXXFLAGS=-O1 -I. -Wno-narrowing
 
 LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
 
@@ -16,7 +16,7 @@ SRC = main.o circle.o scene.o list_render_object.o physics.o
 
 main: $(SRC) 
 	$(CXX) -o main  $(SRC) $(CXXFLAGS) $(LIBS) 
-	./main
+	#./main
 
 clean:
 	rm -f *.o main
