@@ -5,10 +5,15 @@
 class ListRenderObject {
 
 	private:
-		vector<RenderObject *> vro;
+		
 	public:
+		vector<RenderObject *> vro;
+		
 		ListRenderObject();
 		~ListRenderObject();
 		void addCircle(int x, int y, int r);
 		void renderAll();
+		int size();
+		void clear();
+		void rotateAll1Deg();
 };

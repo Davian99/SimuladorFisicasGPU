@@ -6,7 +6,7 @@ CXXFLAGS=-O1 -I.
 
 LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
 
-SRC = main.o circle.o scene.o list_render_object.o
+SRC = main.o circle.o scene.o list_render_object.o physics.o
 
 %.o: %.cu
 	$(NVCC) $(CFLAGS) -c -o $@ $<

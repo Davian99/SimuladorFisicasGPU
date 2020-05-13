@@ -16,13 +16,20 @@ Scene scene;
 
 void timer(int) {
     glutPostRedisplay();
-    glutTimerFunc(1000/fps, timer, 0);
+    glutTimerFunc(dt, timer, 0);
 }
 
 void keyboard(unsigned char c, int x, int y) {
     switch(c){
         case ESC_KEY:
             exit(0);
+            break;
+        case 'c':
+            scene.addCircle(x, y, 50);
+            break;
+        case 'r':
+            scene.reset();
+            break;
         default:
             break;
     }
@@ -31,8 +38,7 @@ void keyboard(unsigned char c, int x, int y) {
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
     	if (state == GLUT_DOWN){
-            cout << "ABAJO\n";
-    		scene.addCircle(x, y, 100);
+    		;
     	}
     }
 
@@ -49,14 +55,14 @@ void mouse(int button, int state, int x, int y) {
 }
 
 void mousePosition(int x, int y) {
-	scene.upddate_mouse_pos(x, y);
+	scene.upddateMousePos(x, y);
 }
 
 void render(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     scene.render();
-    renderString(10, 24, "HOLA");
+    //renderString(10, 24, "HOLA");
 
     glutSwapBuffers();
 }
@@ -79,14 +85,16 @@ void initOCL(int argc, char** argv){
 }
 
 void initCosSinTables(){
-    for (int ii = 0; ii < 180; ii++)   {
-        float theta = 2.0f * PI * float(ii) / float(180);//get the current angle 
+    for (int ii = 0; ii < NUM_CIR_SEG; ii++)   {
+        float theta = 2.0f * PI * float(ii) / float(NUM_CIR_SEG);//get the current angle 
         cos_table[ii] = cos(theta);
         sin_table[ii] = sin(theta); 
     }
 }
 
 int main(int argc, char** argv){
+
+    srand(1); //Static seed
 
     initCosSinTables();
 

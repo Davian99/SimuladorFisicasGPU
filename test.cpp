@@ -106,7 +106,7 @@ void DrawCircle(int cxp, int cyp, float r, int num_segments) {
 
 void render(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    /*
     int x = rand() % WIDTH;
     int y = rand() % HEIGHT;
     circles.push_back({x, y});
@@ -120,6 +120,9 @@ void render(void) {
 
 	
 	DrawCircle(mouse_location.first, mouse_location.second, to_percent(grav), 360);
+    */
+
+    
 
 
     glutSwapBuffers();

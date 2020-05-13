@@ -1,34 +1,36 @@
 #include "scene.h"
 
 Scene::Scene(){
-	;
+	this->frame_count = 0;
+	this->phy = Physics(this);
 }
 
 void Scene::render(){
+	this->phy.step();
+	this->frame_count++;
 	this->lro.renderAll();
+	this->renderDefaultText();
 }
 
-void Scene::upddate_mouse_pos(int x, int y){
+void Scene::upddateMousePos(int x, int y){
 	this->mx = x;
 	this->my = y;
-}
+}	
 
 void Scene::addCircle(int x, int y, int r){
 	this->lro.addCircle(x, y, r);
 }
 
-void Scene::print_text(){
-	unsigned char ss[] = "The quick god jumps over the lazy brown fox.";
-	string sss = "The quick god jumps over the lazy brown fox.";
-	int w;
-	w = glutBitmapLength(GLUT_BITMAP_8_BY_13, ss);
-	glRasterPos2f(0., 0.);
-	float x = .5; /* Centre in the middle of the window */
-	glRasterPos2f(x - (float) WIDTH / 2, 0.);
-	glColor3ub(255, 0, 0);
-	for (int i = 0; i < sss.size(); i++) {
-    	glutBitmapCharacter(GLUT_BITMAP_8_BY_13, ss[i]);
-	}
+void Scene::renderDefaultText(){
+	string frames = "Frame: " + to_string(this->frame_count);
+	renderString(10, 24, frames);
+	string object_count = "Objects: " + to_string(this->lro.size());
+	renderString(10, 48, object_count);
+}
+
+void Scene::reset(){
+	this->frame_count = 0;
+	this->lro.clear();
 }
 
 float pixelsTo(float px){
@@ -48,4 +50,14 @@ void renderString(int x, int y, string s){
 	unsigned int l = s.size();
 	for(unsigned int i = 0; i < l; ++i)
 		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18 , s[i]);
+}
+
+void glVertexC(float x, float y){
+	float fx = ((x * 2.0f) / WIDTH) - 1;
+	float fy = -1.0f * (((y * 2.0f) / HEIGHT) - 1);
+	glVertex2f(fx, fy);
+}
+
+float degToRad(float deg){
+	return deg * PI / 180.f;
 }
