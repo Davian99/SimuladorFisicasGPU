@@ -4,12 +4,20 @@ Scene::Scene(){
 	this->frame_count = 0;
 	this->phy = Physics(this);
 	this->activated_physics = true;
+	this->lro.addCircle(WIDTH/2, HEIGHT/2, 100, true);
+	for(int posx = 0; posx <= WIDTH; posx += 10)
+		this->lro.addCircle(posx, HEIGHT, 100, true);
 }
 
 void Scene::render(){
 	if(activated_physics){
 		this->frame_count++;
 		this->phy.step();
+	}
+	else if(stepByStep){
+		this->frame_count++;
+		this->phy.step();
+		stepByStep = false;
 	}
 	this->lro.renderAll();
 	this->renderDefaultText();
@@ -20,8 +28,8 @@ void Scene::upddateMousePos(int x, int y){
 	this->my = y;
 }	
 
-void Scene::addCircle(int x, int y, int r){
-	this->lro.addCircle(x, y, r);
+void Scene::addCircle(int x, int y, int r, bool _static){
+	this->lro.addCircle(x, y, r, _static);
 }
 
 void Scene::renderDefaultText(){
@@ -34,6 +42,9 @@ void Scene::renderDefaultText(){
 void Scene::reset(){
 	this->frame_count = 0;
 	this->lro.clear();
+	this->lro.addCircle(WIDTH/2, HEIGHT/2, 100, true);
+	for(int posx = 0; posx <= WIDTH; posx += 10)
+		this->lro.addCircle(posx, HEIGHT, 100, true);
 }
 
 float pixelsTo(float px){
@@ -65,7 +76,6 @@ float degToRad(float deg){
 	return deg * PI / 180.f;
 }
 
-
 bool save_screenshot(string filename, int w, int h) {	
   //This prevents the images getting padded 
  // when the width multiplied by 3 is not a multiple of 4
@@ -84,15 +94,14 @@ bool save_screenshot(string filename, int w, int h) {
 		 GL_BGR, GL_UNSIGNED_BYTE, dataBuffer);
 	
    //Now the file creation
-   string path = "/home/davian/Uni20/GPU/images/" + filename;
+   //string path = "/home/davian/Uni20/GPU/images/" + filename;
+   string path = filename;
    FILE *filePtr = fopen(path.c_str(), "wb");
    if (!filePtr) return false;
 	
-   
+ 
    unsigned char TGAheader[12]={0,0,2,0,0,0,0,0,0,0,0,0};
-   unsigned char header[6] = { w%256,w/256,
-			       h%256,h/256,
-			       24,0};
+   unsigned char header[6] = { w%256,w/256,h%256,h/256,24,0};
    // We write the headers
    fwrite(TGAheader,	sizeof(unsigned char),	12,	filePtr);
    fwrite(header,	sizeof(unsigned char),	6,	filePtr);

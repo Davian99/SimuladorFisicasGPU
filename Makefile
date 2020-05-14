@@ -16,7 +16,7 @@ SRC = main.o circle.o scene.o list_render_object.o physics.o
 
 main: $(SRC) 
 	$(CXX) -o main  $(SRC) $(CXXFLAGS) $(LIBS) 
-	#./main
+	./main
 
 clean:
 	rm -f *.o main

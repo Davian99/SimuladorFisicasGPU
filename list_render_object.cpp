@@ -15,8 +15,8 @@ void ListRenderObject::rotateAll1Deg(){
     	p->rotate1Deg();
 }
 
-void ListRenderObject::addCircle(int x, int y, int r){
-	this->vro.push_back(new Circle(x, y, r));
+void ListRenderObject::addCircle(int x, int y, int r, bool _static){
+	this->vro.push_back(new Circle(x, y, r, _static));
 }
 
 void ListRenderObject::renderAll(){

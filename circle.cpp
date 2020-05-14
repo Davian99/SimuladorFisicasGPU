@@ -1,10 +1,9 @@
 #include "main.h"
 #include "render_object.h"
 
-Circle::Circle(float x, float y, float r){
+Circle::Circle(float x, float y, float r, bool _static){
 	this->px = x;
 	this->py = y;
-    this->real_r = r;
 	this->radius = r;
     this->orient = rand() % 360;
     this->torque = 0.0f;
@@ -13,17 +12,24 @@ Circle::Circle(float x, float y, float r){
     this->force_x = 0.0f;
     this->force_y = 0.0f;
     this->angularVelocity = 0.0f;
+    this->staticFriction = 0.5f;
+    this->dynamicFriction = 0.3f;
+    this->restitution = 0.2f;
 
-    this->mass = PI * radius * radius * density;
-    this->inv_mass = 1.0f / mass;
-    this->inertia = mass * radius * radius;
-    this->inv_inertia = 1.0f / inertia;
+    if(_static)
+        this->setStatic();
+    else{
+        this->mass = PI * radius * radius * density;
+        this->inv_mass = 1.0f / mass;
+        this->inertia = mass * radius * radius;
+        this->inv_inertia = 1.0f / inertia;
+    }
 }
 
 Circle::Circle(){
     this->px = 0.0f;
     this->py = 0.0f;
-    this->real_r = 0.0f;
+    this->radius = 0.0f;
 }
 
 void Circle::modifyPos(float x, float y){
@@ -43,9 +49,15 @@ void Circle::setStatic(){
     this->inv_inertia = 0.0f;
 }
 
-void Circle::ApplyForce(const float fx, const float fy){
+void Circle::applyForce(const float fx, const float fy){
     this->force_x += fx;
     this->force_y += fy;
+}
+
+void Circle::applyImpulse(float impulse_x, float impulse_y, float cvx, float cvy){
+    this->vx += this->inv_mass * impulse_x;
+    this->vy += this->inv_mass * impulse_y;
+    this->angularVelocity += this->inv_inertia * ((cvx * impulse_y) - (cvy * impulse_x));
 }
 
 void Circle::render() {
@@ -53,8 +65,8 @@ void Circle::render() {
    	glColor3ub(255, 255, 255);
     for (int ii = 0; ii < NUM_CIR_SEG; ii++)   {
         float theta = 2.0f * PI * float(ii) / float(NUM_CIR_SEG);//get the current angle 
-        float x = this->real_r * cos_table[ii];
-        float y = this->real_r * sin_table[ii]; 
+        float x = this->radius * cos_table[ii];
+        float y = this->radius * sin_table[ii]; 
         glVertexC(x + this->px, y + this->py);
     }
     glEnd();
@@ -63,8 +75,8 @@ void Circle::render() {
     
     glBegin(GL_LINES);
     glVertexC(this->px, this->py);
-    float x = this->real_r * cos_table[(int)this->orient];
-    float y = this->real_r * sin_table[(int)this->orient];
+    float x = this->radius * cos(this->orient);
+    float y = this->radius * sin(this->orient);
     glVertexC(this->px + x, this->py + y);
     glEnd();
 

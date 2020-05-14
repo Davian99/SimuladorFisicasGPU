@@ -22,20 +22,28 @@ void timer(int) {
 
 void keyboard(unsigned char c, int x, int y) {
     switch(c){
+        case 'p':
+            printf("Mouse at: (%d, %d)\n", x, y);
+            break;
+        case 'm':
+            scene.static_circles = !scene.static_circles;
         case SPC_KEY:
-            scene.activated_physics = !scene.activated_physics;
+            scene.stepByStep = !scene.stepByStep;
             break;  
+        case 'f':
+            scene.activated_physics = !scene.activated_physics;
+            break;
         case ESC_KEY:
             exit(0);
             break;
         case 'c':
-            scene.addCircle(x, y, 50);
+            scene.addCircle(x, y, 50, scene.static_circles);
             break;
         case 'r':
             scene.reset();
             break;
         case 's':
-            save_screenshot("image", WIDTH, HEIGHT);
+            save_screenshot("/images/frame" + to_string(scene.frame_count), WIDTH, HEIGHT);
             break;
         default:
             break;
@@ -45,7 +53,7 @@ void keyboard(unsigned char c, int x, int y) {
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
     	if (state == GLUT_DOWN){
-    		;
+    		scene.addCircle(x, y, 50, scene.static_circles);
     	}
     }
 

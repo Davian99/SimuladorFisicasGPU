@@ -11,7 +11,7 @@ class ListRenderObject {
 		
 		ListRenderObject();
 		~ListRenderObject();
-		void addCircle(int x, int y, int r);
+		void addCircle(int x, int y, int r, bool _static);
 		void renderAll();
 		int size();
 		void clear();
