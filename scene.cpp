@@ -1,13 +1,16 @@
 #include "scene.h"
 
+
+
 Scene::Scene(){ // @suppress("Class members should be properly initialized")
 	this->n_collisions = 0;
 	this->frame_count = 0;
 	this->phy = Physics(this);
 	this->activated_physics = true;
+	this->bench_frames = 500;
 	//this->lro.addCircle(WIDTH/2, HEIGHT/2, 50, true);
 		
-	this->addWalls();
+	//this->addWalls();
 
 }
 
@@ -46,7 +49,7 @@ void Scene::renderDefaultText(){
 void Scene::reset(){
 	this->frame_count = 0;
 	this->lro.clear();
-	this->addWalls();
+	//this->addWalls();
 }
 
 void Scene::addWalls(){
@@ -61,6 +64,7 @@ void Scene::addWalls(){
 }
 
 void Scene::normalDistribution(){
+	this->addWalls();
 	bool shift = true;
 	for(int posy = 215; posy <= HEIGHT - 300; posy += 60){
 		shift = !shift;
@@ -80,6 +84,34 @@ void Scene::normalDistribution(){
 	for(int posx = 625, posy = 0; posx > 420; posx -= 3, posy += 2){
 		this->lro.addCircle(posx, posy, 2, true);
 	}
+}
+
+void Scene::benchmark(){
+	this->benchmarking = true;
+	this->reset();
+	this->addWalls();
+	bool shift = true;
+	for(int posy = 185; posy <= HEIGHT - 150; posy += 30){
+		shift = !shift;
+		for(int posx = 15; posx <= WIDTH-15; posx += 30){
+			this->lro.addCircle(posx + shift * 15, posy, 5*2, true);
+		}
+	}
+
+	for(int x = 12; x < WIDTH - 10; x += 8){
+		for(int y = 10; y < 150; y += 8){
+			this->lro.addCircle(x, y, 2, false);
+		}
+	}
+	this->begin = steady_clock::now();
+}
+
+void Scene::elapsedTime(){
+	steady_clock::time_point end = steady_clock::now();
+	duration<double, std::micro> microseconds = end - this->begin;
+	float seconds = microseconds.count() / 1000000.0f;
+	printf("Benchmark with %d frames completed in %f seconds giving FPS = %f\n", 
+		this->bench_frames, seconds, this->bench_frames / seconds);
 }
 
 float pixelsTo(float px){

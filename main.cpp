@@ -1,6 +1,8 @@
 #include "main.h"
 #include "scene.h"
 
+#include <chrono>
+
 #define ESC_KEY 27
 #define SPC_KEY 32
 
@@ -18,6 +20,11 @@ float gravity = 10.0f * 75.0f;
 Scene scene;
 
 void timer(int) {
+    if(scene.benchmarking && scene.frame_count == scene.bench_frames){
+        scene.elapsedTime();
+        scene.benchmarking = false;
+        //exit(0);
+    }
     glutPostRedisplay();
     glutTimerFunc(dt * 1000.0f, timer, 0);
 }
@@ -27,6 +34,9 @@ void keyboard(unsigned char c, int x, int y) {
 	if(char_value > 0 && char_value < 10)
 		scene.addCircle(x, y, char_value*3, scene.static_circles);
     switch(c){
+        case 'b':
+            scene.benchmark();
+            break;
         case 'n':
             scene.reset();
             scene.normalDistribution();
@@ -36,6 +46,7 @@ void keyboard(unsigned char c, int x, int y) {
             break;
         case 'm':
             scene.static_circles = !scene.static_circles;
+            break;
         case SPC_KEY:
             scene.stepByStep = !scene.stepByStep;
             break; 
@@ -57,6 +68,8 @@ void keyboard(unsigned char c, int x, int y) {
         case 's':
             save_screenshot("/images/frame" + to_string(scene.frame_count), WIDTH, HEIGHT);
             break;
+        case 'w':
+            scene.addWalls();
         default:
             break;
     }
@@ -105,7 +118,7 @@ void initOCL(int argc, char** argv){
     glutMouseFunc(mouse);
     glutPassiveMotionFunc(mousePosition);
 
-    glutTimerFunc(1000/60, timer, 0);
+    glutTimerFunc(dt * 1000.0f, timer, 0);
 
     glutMainLoop();
 }
