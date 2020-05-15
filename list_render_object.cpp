@@ -10,10 +10,6 @@ ListRenderObject::~ListRenderObject(){
     	delete p;
 }
 
-void ListRenderObject::rotateAll1Deg(){
-	for (auto p : this->vro)
-    	p->rotate1Deg();
-}
 
 void ListRenderObject::addCircle(int x, int y, int r, bool _static){
 	this->vro.push_back(new Circle(x, y, r, _static));

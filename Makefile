@@ -1,9 +1,9 @@
 CXX = g++
 NVCC = nvcc
 
-CFLAGS=-O1 -I. 
-CXXFLAGS=-O1 -I. -Wno-narrowing
-
+CFLAGS=-O3 -I.
+CXXFLAGS=-O3 -I.
+MORECXXFLAGS=-Wno-narrowing -Wunused
 LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
 
 SRC = main.o circle.o scene.o list_render_object.o physics.o
@@ -12,7 +12,7 @@ SRC = main.o circle.o scene.o list_render_object.o physics.o
 	$(NVCC) $(CFLAGS) -c -o $@ $<
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(MORECXXFLAGS) -c -o $@ $<
 
 main: $(SRC) 
 	$(CXX) -o main  $(SRC) $(CXXFLAGS) $(LIBS) 

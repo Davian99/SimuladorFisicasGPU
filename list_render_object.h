@@ -15,5 +15,4 @@ class ListRenderObject {
 		void renderAll();
 		int size();
 		void clear();
-		void rotateAll1Deg();
 };

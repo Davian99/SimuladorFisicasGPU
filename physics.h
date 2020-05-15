@@ -10,7 +10,6 @@ class Collision {
 		RenderObject *A, *B;
 		float penetration, contact_x, contact_y;
 		float normal_x, normal_y;
-		float e, df, sf;
 };
 
 class Physics {
@@ -26,6 +25,5 @@ class Physics {
 		void solveCollisions();
 		void integrateVelocities();
 		void positionalCorrection();
-		void clearForces();
 };
 

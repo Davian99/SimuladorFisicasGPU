@@ -16,6 +16,7 @@ float cos_table[NUM_CIR_SEG];
 float sin_table[NUM_CIR_SEG];
 
 float gravity = 10.0f * 75.0f;
+int s_mul = 3;
 
 Scene scene;
 
@@ -29,10 +30,28 @@ void timer(int) {
     glutTimerFunc(dt * 1000.0f, timer, 0);
 }
 
+void specialInput(int key, int x, int y){
+    switch(key){
+        case GLUT_KEY_UP:
+            s_mul++;
+            break;
+        case GLUT_KEY_DOWN:
+            s_mul--;
+            s_mul = max(s_mul, 1);
+            break;
+        case GLUT_KEY_LEFT:
+            //do something here
+            break;
+        case GLUT_KEY_RIGHT:
+            //do something here
+            break;
+    }
+}
+
 void keyboard(unsigned char c, int x, int y) {
 	int char_value = c - '0';
 	if(char_value > 0 && char_value < 10)
-		scene.addCircle(x, y, char_value*3, scene.static_circles);
+		scene.addCircle(x, y, char_value*s_mul, scene.static_circles);
     switch(c){
         case 'b':
             scene.benchmark();
@@ -117,6 +136,7 @@ void initOCL(int argc, char** argv){
     glutKeyboardFunc(keyboard);
     glutMouseFunc(mouse);
     glutPassiveMotionFunc(mousePosition);
+    glutSpecialFunc(specialInput);
 
     glutTimerFunc(dt * 1000.0f, timer, 0);
 

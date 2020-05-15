@@ -1,17 +1,11 @@
 #include "scene.h"
 
-
-
-Scene::Scene(){ // @suppress("Class members should be properly initialized")
+Scene::Scene(){
 	this->n_collisions = 0;
 	this->frame_count = 0;
 	this->phy = Physics(this);
 	this->activated_physics = true;
-	this->bench_frames = 500;
-	//this->lro.addCircle(WIDTH/2, HEIGHT/2, 50, true);
-		
-	//this->addWalls();
-
+	this->bench_frames = 300;
 }
 
 void Scene::render(){
@@ -49,7 +43,6 @@ void Scene::renderDefaultText(){
 void Scene::reset(){
 	this->frame_count = 0;
 	this->lro.clear();
-	//this->addWalls();
 }
 
 void Scene::addWalls(){
