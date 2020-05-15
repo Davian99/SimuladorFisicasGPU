@@ -1,12 +1,19 @@
 #include "scene.h"
 
-Scene::Scene(){
+Scene::Scene(){ // @suppress("Class members should be properly initialized")
+	this->n_collisions = 0;
 	this->frame_count = 0;
 	this->phy = Physics(this);
 	this->activated_physics = true;
-	this->lro.addCircle(WIDTH/2, HEIGHT/2, 100, true);
+	this->lro.addCircle(WIDTH/2, HEIGHT/2, 50, true);
 	for(int posx = 0; posx <= WIDTH; posx += 10)
-		this->lro.addCircle(posx, HEIGHT, 100, true);
+			this->lro.addCircle(posx, HEIGHT+99, 100, true);
+
+	for(int posx = 0; posx <= WIDTH; posx += 20)
+			this->lro.addCircle(0-99, posx, 100, true);
+
+	for(int posx = 0; posx <= WIDTH; posx += 20)
+			this->lro.addCircle(WIDTH+99, posx, 100, true);
 }
 
 void Scene::render(){
@@ -37,14 +44,22 @@ void Scene::renderDefaultText(){
 	renderString(10, 24, frames);
 	string object_count = "Objects: " + to_string(this->lro.size());
 	renderString(10, 48, object_count);
+	string number_collisions = "Collisions: " + to_string(this->n_collisions);
+	renderString(10, 72, number_collisions);
 }
 
 void Scene::reset(){
 	this->frame_count = 0;
 	this->lro.clear();
-	this->lro.addCircle(WIDTH/2, HEIGHT/2, 100, true);
+	this->lro.addCircle(WIDTH/2, HEIGHT/2, 50, true);
 	for(int posx = 0; posx <= WIDTH; posx += 10)
-		this->lro.addCircle(posx, HEIGHT, 100, true);
+			this->lro.addCircle(posx, HEIGHT+99, 100, true);
+
+	for(int posx = 0; posx <= WIDTH; posx += 20)
+			this->lro.addCircle(0-99, posx, 100, true);
+
+	for(int posx = 0; posx <= WIDTH; posx += 20)
+			this->lro.addCircle(WIDTH+99, posx, 100, true);
 }
 
 float pixelsTo(float px){

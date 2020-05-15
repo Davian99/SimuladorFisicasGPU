@@ -8,6 +8,7 @@ class RenderObject {
 		virtual void applyForce(const float fx, const float fy) = 0;
 		virtual void modifyPos(float x, float y) = 0;
 		virtual void applyImpulse(float impulse_x, float impulse_y, float cvx, float cvy) = 0;
+		virtual void setOrient(float radians) = 0;
 
 		float px, py, real_r, radius;
 		float vx, vy;
@@ -31,5 +32,6 @@ class Circle: public RenderObject {
 		void applyForce(const float fx, const float fy) override;
 		void modifyPos(float x, float y) override;
 		void applyImpulse(float impulse_x, float impulse_y, float cvx, float cvy) override;
+		void setOrient(float radians) override;
 		
 };

@@ -32,7 +32,7 @@ bool calculateContacPoints(RenderObject * ri, RenderObject * rj, Collision &c){
 	c.sf = sqrt(ri->staticFriction * rj->staticFriction);
   	c.df = sqrt(ri->dynamicFriction * rj->dynamicFriction);
 	
-	if(dist < EPS) {
+	if(dist <= EPS) {
 		c.penetration = ri->radius;
 		c.normal_x = 1.0f;
 		c.normal_y = 0.0f;
@@ -51,9 +51,9 @@ bool calculateContacPoints(RenderObject * ri, RenderObject * rj, Collision &c){
 }
 
 void Physics::calculateContacs(){
-	for (int i = 0; i < this->scene->lro.vro.size(); ++i){
+	for (unsigned int i = 0; i < this->scene->lro.vro.size(); ++i){
 		RenderObject * ri = this->scene->lro.vro[i];
-		for (int j = i + 1; j < this->scene->lro.vro.size(); ++j){
+		for (unsigned int j = i + 1; j < this->scene->lro.vro.size(); ++j){
 			RenderObject * rj = this->scene->lro.vro[j];
 			if(ri->inv_mass == 0.0f && rj->inv_mass == 0.0f)
 				continue;
@@ -62,6 +62,7 @@ void Physics::calculateContacs(){
 				this->contacs.push_back(c);
 		}
 	}
+	this->scene->n_collisions = this->contacs.size();
 }
 
 void Physics::integrateForces(){
@@ -70,10 +71,10 @@ void Physics::integrateForces(){
 	}
 }
 
-void applyImpulse(Collision &c){
+void calculateImpulse(Collision &c){
 	RenderObject * A = c.A;
 	RenderObject * B = c.B;
-	if(A->inv_mass + B->inv_mass < EPS) {
+	if(A->mass + B->mass < EPS) {
     	//InfiniteMassCorrection(); TODO
     	return;
   	}
@@ -108,8 +109,8 @@ void applyImpulse(Collision &c){
   	A->applyImpulse(-impulse_x, -impulse_y, rax, ray);
   	B->applyImpulse(impulse_x, impulse_y, rbx, rby);
 
-  	float tx = rvx - (c.normal_x * rvx * c.normal_x + rvy * c.normal_y);
-  	float ty = rvy - (c.normal_y * rvx * c.normal_x + rvy * c.normal_y);
+  	float tx = rvx - (c.normal_x * (rvx * c.normal_x + rvy * c.normal_y));
+  	float ty = rvy - (c.normal_y * (rvx * c.normal_x + rvy * c.normal_y));
 
   	float len = sqrt(tx*tx + ty*ty);
   	if(len > EPS){
@@ -119,10 +120,11 @@ void applyImpulse(Collision &c){
 
   	float jt = -(rvx * tx + rvy * ty);
   	jt /= invMassSum;
-  	if(jt < EPS)
+  	//printf("jt=%d\n", jt);
+  	if(fabs(jt) <= EPS)
   		return;
 
-  	float timp_x, timp_y;
+  	float timp_x = 0.0f, timp_y = 0.0f;
   	if(abs(jt) < j * c.sf){
   		timp_x = tx * jt;
   		timp_y = ty * jt;
@@ -130,10 +132,12 @@ void applyImpulse(Collision &c){
   	else{
   		timp_x = tx * (-jt) * c.df;
   		timp_y = ty * (-jt) * c.df;
+  		;
   	}
-
-  	A->applyImpulse(-timp_x, -timp_y, rax, ray);
-  	B->applyImpulse(timp_x, timp_y, rbx, rby);
+  	//printf("timp_x=%f, timp_y=%f\n", timp_x, timp_y);
+  	//printf("jt=%f\n", jt);
+  	//A->applyImpulse(-timp_x, -timp_y, rax, ray);
+  	//B->applyImpulse(timp_x, timp_y, rbx, rby);
 
   	return;
 }
@@ -141,7 +145,7 @@ void applyImpulse(Collision &c){
 void Physics::solveCollisions(){
 	for (int i = 0; i < iterations; ++i){
 		for (auto c : this->contacs){
-			applyImpulse(c);
+			calculateImpulse(c);
 		}
 	}
 }
@@ -164,7 +168,8 @@ void integrateForcesObject(RenderObject * ro){
 	if(ro->inv_mass > 0.0f){
 		ro->vx += (ro->force_x * ro->inv_mass) * (dt / 2.0f);
 		ro->vy += (ro->force_y * ro->inv_mass + gravity) * (dt / 2.0f);
-		ro->angularVelocity = ro->torque * ro->inertia * (dt / 2.0f);
+		ro->angularVelocity = ro->torque * ro->inv_inertia * (dt / 2.0f);
+		//printf("AV=%f, torque=%f, inv_inertia=%f, dt=%f\n", ro->angularVelocity, ro->torque, ro->inv_inertia, dt);
 	}
 }
 
@@ -172,10 +177,10 @@ void integrateVelocitiesObject(RenderObject * ro){
 	if(ro->inv_mass > 0.0f){
 		ro->px += ro->vx * dt;
 		ro->py += ro->vy * dt;
-		float orient_change = (360.f / 2*PI) * ro->angularVelocity * dt;
+		float orient_change = ro->angularVelocity * dt;
 		ro->orient += orient_change;
-		printf("Orient = %f\n", orient_change);
-		ro->orient = (int)(ro->orient) % 360;
+		ro->setOrient(ro->orient);
+		//printf("Orient=%f\n", ro->orient);
 		integrateForcesObject(ro);
 	}
 }

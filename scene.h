@@ -11,7 +11,7 @@ class Scene {
 		Physics phy;
 
 	public:
-		int frame_count;
+		int frame_count, n_collisions;
 		ListRenderObject lro;
 		bool activated_physics, stepByStep, static_circles = false;
 		

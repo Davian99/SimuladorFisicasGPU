@@ -11,7 +11,7 @@
 #include <GL/glut.h> 
 
 #define PI 3.141592f
-#define EPS 1e-5f
+#define EPS 0.0001f
 #define NUM_CIR_SEG 30
 #define HEIGHT 800 //Height of the window
 #define WIDTH 800 //Width of the window
@@ -23,7 +23,7 @@ const float dt = 1.0f / fps;
 const float density = 1.0f;
 
 const float gravity = 10.0f * 75.0f;
-const unsigned int iterations = 100;
+const unsigned int iterations = 10;
 
 extern float cos_table[NUM_CIR_SEG];
 extern float sin_table[NUM_CIR_SEG];

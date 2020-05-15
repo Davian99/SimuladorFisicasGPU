@@ -21,6 +21,9 @@ void timer(int) {
 }
 
 void keyboard(unsigned char c, int x, int y) {
+	int char_value = c - '0';
+	if(char_value > 0 && char_value < 10)
+		scene.addCircle(x, y, char_value*3, scene.static_circles);
     switch(c){
         case 'p':
             printf("Mouse at: (%d, %d)\n", x, y);
@@ -37,7 +40,7 @@ void keyboard(unsigned char c, int x, int y) {
             exit(0);
             break;
         case 'c':
-            scene.addCircle(x, y, 50, scene.static_circles);
+            scene.addCircle(x, y, 25, scene.static_circles);
             break;
         case 'r':
             scene.reset();
@@ -53,7 +56,7 @@ void keyboard(unsigned char c, int x, int y) {
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
     	if (state == GLUT_DOWN){
-    		scene.addCircle(x, y, 50, scene.static_circles);
+    		scene.addCircle(x, y, 3 + rand() % 27, scene.static_circles);
     	}
     }
 
