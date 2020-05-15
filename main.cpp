@@ -13,6 +13,8 @@ void render(void);
 float cos_table[NUM_CIR_SEG];
 float sin_table[NUM_CIR_SEG];
 
+float gravity = 10.0f * 75.0f;
+
 Scene scene;
 
 void timer(int) {
@@ -25,6 +27,10 @@ void keyboard(unsigned char c, int x, int y) {
 	if(char_value > 0 && char_value < 10)
 		scene.addCircle(x, y, char_value*3, scene.static_circles);
     switch(c){
+        case 'n':
+            scene.reset();
+            scene.normalDistribution();
+            break;
         case 'p':
             printf("Mouse at: (%d, %d)\n", x, y);
             break;
@@ -32,7 +38,10 @@ void keyboard(unsigned char c, int x, int y) {
             scene.static_circles = !scene.static_circles;
         case SPC_KEY:
             scene.stepByStep = !scene.stepByStep;
-            break;  
+            break; 
+        case 'g':
+            gravity = gravity ? 0.0f : 10.0f * 75.0f;
+            break;
         case 'f':
             scene.activated_physics = !scene.activated_physics;
             break;
@@ -80,8 +89,6 @@ void render(void) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     scene.render();
-    //save_screenshot("Frame" + to_string(scene.frame_count), WIDTH, HEIGHT) + ".tga";
-    //renderString(10, 24, "HOLA");
 
     glutSwapBuffers();
 }
@@ -91,7 +98,7 @@ void initOCL(int argc, char** argv){
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(WIDTH, HEIGHT);
-    glutCreateWindow("Test Program");
+    glutCreateWindow("Only Circles");
 
     glutDisplayFunc(render);
     glutKeyboardFunc(keyboard);

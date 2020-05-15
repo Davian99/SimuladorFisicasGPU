@@ -14,6 +14,7 @@ void Physics::step(){
 	this->integrateForces();
 	this->solveCollisions();
 	this->integrateVelocities();
+	this->positionalCorrection();
 	this->clearForces();
 	this->contacs.clear();
 }
@@ -75,7 +76,10 @@ void calculateImpulse(Collision &c){
 	RenderObject * A = c.A;
 	RenderObject * B = c.B;
 	if(A->mass + B->mass < EPS) {
-    	//InfiniteMassCorrection(); TODO
+    	A->vx = 0.0f;
+    	A->vy = 0.0f;
+    	B->vx = 0.0f;
+    	B->vy = 0.0f;
     	return;
   	}
 
@@ -153,6 +157,24 @@ void Physics::solveCollisions(){
 void Physics::integrateVelocities(){
 	for (auto p : this->scene->lro.vro){
 		integrateVelocitiesObject(p);
+	}
+}
+
+void contactCorrection(Collision &c){
+	float k_slop = 0.05f; // Penetration allowance
+	float percent = 0.4f; // Penetration percentage to correct
+	float corr_x = (max(c.penetration - k_slop, 0.0f) / (c.A->inv_mass + c.B->inv_mass)) * c.normal_x * percent;
+	float corr_y = (max(c.penetration - k_slop, 0.0f) / (c.A->inv_mass + c.B->inv_mass)) * c.normal_y * percent;
+
+	c.A->px -= corr_x * c.A->inv_mass;
+	c.A->py -= corr_y * c.A->inv_mass;
+	c.B->px += corr_x * c.B->inv_mass;
+	c.B->py += corr_y * c.B->inv_mass;
+}
+
+void Physics::positionalCorrection(){
+	for (auto c : this->contacs){
+		contactCorrection(c);
 	}
 }
 

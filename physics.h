@@ -25,6 +25,7 @@ class Physics {
 		void integrateForces();
 		void solveCollisions();
 		void integrateVelocities();
+		void positionalCorrection();
 		void clearForces();
 };
 

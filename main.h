@@ -22,7 +22,7 @@ const float fps = 60.0f;
 const float dt = 1.0f / fps;
 const float density = 1.0f;
 
-const float gravity = 10.0f * 75.0f;
+extern float gravity;
 const unsigned int iterations = 10;
 
 extern float cos_table[NUM_CIR_SEG];

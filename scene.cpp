@@ -5,15 +5,10 @@ Scene::Scene(){ // @suppress("Class members should be properly initialized")
 	this->frame_count = 0;
 	this->phy = Physics(this);
 	this->activated_physics = true;
-	this->lro.addCircle(WIDTH/2, HEIGHT/2, 50, true);
-	for(int posx = 0; posx <= WIDTH; posx += 10)
-			this->lro.addCircle(posx, HEIGHT+99, 100, true);
+	//this->lro.addCircle(WIDTH/2, HEIGHT/2, 50, true);
+		
+	this->addWalls();
 
-	for(int posx = 0; posx <= WIDTH; posx += 20)
-			this->lro.addCircle(0-99, posx, 100, true);
-
-	for(int posx = 0; posx <= WIDTH; posx += 20)
-			this->lro.addCircle(WIDTH+99, posx, 100, true);
 }
 
 void Scene::render(){
@@ -51,15 +46,40 @@ void Scene::renderDefaultText(){
 void Scene::reset(){
 	this->frame_count = 0;
 	this->lro.clear();
-	this->lro.addCircle(WIDTH/2, HEIGHT/2, 50, true);
+	this->addWalls();
+}
+
+void Scene::addWalls(){
 	for(int posx = 0; posx <= WIDTH; posx += 10)
-			this->lro.addCircle(posx, HEIGHT+99, 100, true);
+		this->lro.addCircle(posx, HEIGHT+99, 100, true);
 
 	for(int posx = 0; posx <= WIDTH; posx += 20)
-			this->lro.addCircle(0-99, posx, 100, true);
+		this->lro.addCircle(0-99, posx, 100, true);
 
 	for(int posx = 0; posx <= WIDTH; posx += 20)
-			this->lro.addCircle(WIDTH+99, posx, 100, true);
+		this->lro.addCircle(WIDTH+99, posx, 100, true);
+}
+
+void Scene::normalDistribution(){
+	bool shift = true;
+	for(int posy = 215; posy <= HEIGHT - 300; posy += 60){
+		shift = !shift;
+		for(int posx = 100; posx <= WIDTH-100; posx += 60){
+			this->lro.addCircle(posx + shift * 30, posy, 5*4, true);
+		}
+	}
+	for(int posx = 50; posx < WIDTH; posx += 50)
+		for(int posy = 0; posy < 250; posy += 6)
+			this->lro.addCircle(posx, HEIGHT - posy, 3, true);
+
+
+	for(int posx = 175, posy = 0; posx < 380; posx += 3, posy += 2){
+		this->lro.addCircle(posx, posy, 2, true);
+	}
+
+	for(int posx = 625, posy = 0; posx > 420; posx -= 3, posy += 2){
+		this->lro.addCircle(posx, posy, 2, true);
+	}
 }
 
 float pixelsTo(float px){

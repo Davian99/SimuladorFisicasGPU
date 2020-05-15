@@ -67,6 +67,7 @@ void Circle::applyImpulse(float impulse_x, float impulse_y, float cvx, float cvy
 
 void Circle::render() {
     glBegin(GL_LINE_LOOP);
+    
    	glColor3ub(255, 255, 255);
     for (int ii = 0; ii < NUM_CIR_SEG; ii++)   {
         //float theta = 2.0f * PI * float(ii) / float(NUM_CIR_SEG);//get the current angle
@@ -75,15 +76,13 @@ void Circle::render() {
         glVertexC(x + this->px, y + this->py);
     }
     glEnd();
-
-    glBegin(GL_LINE_LOOP);
-
+    /*
     glBegin(GL_LINES);
     glVertexC(this->px, this->py);
     float x = this->radius * cos(this->orient);
     float y = this->radius * sin(this->orient);
     glVertexC(this->px + x, this->py + y);
     glEnd();
-
+    */
     glColor3ub(255, 255, 255);
 }

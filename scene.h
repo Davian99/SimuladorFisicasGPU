@@ -21,4 +21,6 @@ class Scene {
 		void addCircle(int x, int y, int r, bool _static);
 		void renderDefaultText();
 		void reset();
+		void addWalls();
+		void normalDistribution();
 };
