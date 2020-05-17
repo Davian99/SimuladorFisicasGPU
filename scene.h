@@ -18,6 +18,7 @@ class Scene {
 		int frame_count, n_collisions;
 		int bench_frames;
 		ListRenderObject lro;
+		float frames_per_second;
 		bool activated_physics, stepByStep, static_circles = false;
 		bool benchmarking = false;
 		

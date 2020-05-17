@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render_object.h"
+#include "gpu_routines.h"
 
 class Scene;
 
@@ -16,6 +17,7 @@ class Physics {
 	private:
 		Scene * scene; // TODO Cambiar por listRenderObject
 		vector<Collision> contacs;
+		GPU gpu;
 	public:
 		Physics(Scene * scene);
 		Physics(){;};

@@ -6,6 +6,7 @@ Scene::Scene(){
 	this->phy = Physics(this);
 	this->activated_physics = true;
 	this->bench_frames = 300;
+	this->frames_per_second = 0.0f;
 }
 
 void Scene::render(){
@@ -38,6 +39,9 @@ void Scene::renderDefaultText(){
 	renderString(10, 48, object_count);
 	string number_collisions = "Collisions: " + to_string(this->n_collisions);
 	renderString(10, 72, number_collisions);
+
+	string frames_ps = "FPS: " + to_string(this->frames_per_second);
+	renderString(10, 96, frames_ps);
 }
 
 void Scene::reset(){

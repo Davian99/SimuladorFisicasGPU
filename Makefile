@@ -6,7 +6,7 @@ CXXFLAGS=-O3 -I.
 MORECXXFLAGS=-Wno-narrowing -Wunused
 LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
 
-SRC = main.o circle.o scene.o list_render_object.o physics.o
+SRC = main.o circle.o scene.o list_render_object.o physics.o gpu_routines.o
 
 %.o: %.cu
 	$(NVCC) $(CFLAGS) -c -o $@ $<

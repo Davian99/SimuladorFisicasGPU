@@ -20,15 +20,8 @@ int s_mul = 3;
 
 Scene scene;
 
-void timer(int) {
-    if(scene.benchmarking && scene.frame_count == scene.bench_frames){
-        scene.elapsedTime();
-        scene.benchmarking = false;
-        //exit(0);
-    }
-    glutPostRedisplay();
-    glutTimerFunc(dt * 1000.0f, timer, 0);
-}
+int _time, timebase = 0;
+int frame = 0;
 
 void specialInput(int key, int x, int y){
     switch(key){
@@ -125,6 +118,23 @@ void render(void) {
     glutSwapBuffers();
 }
 
+void idleFunction(){
+    if(scene.benchmarking && scene.frame_count == scene.bench_frames){
+        scene.elapsedTime();
+        scene.benchmarking = false;
+        //exit(0);
+    }
+    glutPostRedisplay();
+    frame++;
+    _time = glutGet(GLUT_ELAPSED_TIME);
+
+    if (_time - timebase > 1000.0f) {
+        scene.frames_per_second = (frame * 1000.0f) / (_time - timebase);
+        timebase = _time;
+        frame = 0;
+    }
+}
+
 void initOCL(int argc, char** argv){
 	glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -138,7 +148,7 @@ void initOCL(int argc, char** argv){
     glutPassiveMotionFunc(mousePosition);
     glutSpecialFunc(specialInput);
 
-    glutTimerFunc(dt * 1000.0f, timer, 0);
+    glutIdleFunc(idleFunction);
 
     glutMainLoop();
 }

@@ -7,6 +7,7 @@ void integrateForcesObject(RenderObject * ro);
 
 Physics::Physics(Scene * scene){
 	this->scene = scene;
+	this->gpu.initializeContext();
 }
 
 void Physics::step(){
