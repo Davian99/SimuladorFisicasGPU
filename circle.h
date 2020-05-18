@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef __CUDACC__
+#define CUDA_HOSTDEV __host__ __device__
+#else
+#define CUDA_HOSTDEV
+#endif
+
 class Circle {
 	private:
 
@@ -13,7 +19,7 @@ class Circle {
 
 		Circle(float x, float y, float r, bool _static);
 		Circle();
-		~Circle(){};
+		CUDA_HOSTDEV ~Circle(){};
 		void render();
 		void setStatic();
 		void applyImpulse(float impulse_x, float impulse_y, float cvx, float cvy);		

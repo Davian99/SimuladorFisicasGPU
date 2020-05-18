@@ -12,18 +12,39 @@ Physics::Physics(ListCircles * lro){
 }
 
 void Physics::step(){
-	this->gpu.update_mem();
-	this->calculateContacs();
-	this->integrateForces();
-	this->solveCollisions();
-	this->integrateVelocities();
-	this->positionalCorrection();
-	this->contacs.clear();
+	if(true){
+		this->gpu.copy_HostToDevice();
+		this->gpu.calculateContact_GPU(this->contacs);
+		//printf("contacs.size()%d\n", contacs.size());
+		//this->contacs.clear();
+		//this->calculateContacs();
+		//this->gpu.copy_DeviceToHost();
+
+		//this->gpu.copy_HostToDevice();
+		this->gpu.integrateForces_GPU();
+		this->gpu.copy_DeviceToHost();
+
+		this->solveCollisions();
+
+		this->gpu.copy_HostToDevice();
+		this->gpu.integrateVelocities_GPU();
+		this->gpu.copy_DeviceToHost();
+
+		this->positionalCorrection();
+		this->n_collisions = contacs.size();
+		this->contacs.clear();
+	}
+	else{
+		this->calculateContacs();
+		this->integrateForces();
+		this->solveCollisions();
+		this->integrateVelocities();
+		this->positionalCorrection();
+		this->contacs.clear();
+	}	
 }
 
 bool calculateContacPoints(Circle * ri, Circle * rj, Collision &c){
-	c.A = ri;
-	c.B = rj;
 	c.normal_x = rj->px - ri->px;
 	c.normal_y = rj->py - ri->py;
 	float dist = hypot(c.normal_x, c.normal_y);
@@ -45,7 +66,6 @@ bool calculateContacPoints(Circle * ri, Circle * rj, Collision &c){
 		c.contact_x = c.normal_x * ri->radius + ri->px;
 		c.contact_y = c.normal_y * ri->radius + ri->py;
 	}
-	//printf("Contact: (%f, %f)\n", c.contact_x, c.contact_y);
 	return true;
 }
 
@@ -57,11 +77,19 @@ void Physics::calculateContacs(){
 			if(ri->inv_mass == 0.0f && rj->inv_mass == 0.0f)
 				continue;
 			Collision c;
+			c.A = i;
+			c.B = j;
 			if(calculateContacPoints(ri, rj, c))
 				this->contacs.push_back(c);
 		}
 	}
 	this->n_collisions = this->contacs.size();
+}
+
+void integrateForcesObject(Circle * ro){
+	if(ro->inv_mass > 0.0f){
+		ro->vy += gravity * (dt / 2.0f);
+	}
 }
 
 void Physics::integrateForces(){
@@ -70,9 +98,9 @@ void Physics::integrateForces(){
 	}
 }
 
-void calculateImpulse(Collision &c){
-	Circle * A = c.A;
-	Circle * B = c.B;
+void Physics::calculateImpulse(Collision &c){
+	Circle * A = &(this->lro->vro[c.A]);
+	Circle * B = &(this->lro->vro[c.B]);
 	if(A->mass + B->mass < EPS) {
     	A->vx = 0.0f;
     	A->vy = 0.0f;
@@ -117,8 +145,16 @@ void calculateImpulse(Collision &c){
 void Physics::solveCollisions(){
 	for (int i = 0; i < iterations; ++i){
 		for (auto c : this->contacs){
-			calculateImpulse(c);
+			this->calculateImpulse(c);
 		}
+	}
+}
+
+void integrateVelocitiesObject(Circle * ro){
+	if(ro->inv_mass > 0.0f){
+		ro->px += ro->vx * dt;
+		ro->py += ro->vy * dt;
+		integrateForcesObject(ro);
 	}
 }
 
@@ -128,34 +164,22 @@ void Physics::integrateVelocities(){
 	}
 }
 
-void contactCorrection(Collision &c){
+void Physics::contactCorrection(Collision &c){
+	Circle * A = &(this->lro->vro[c.A]);
+	Circle * B = &(this->lro->vro[c.B]);
 	float k_slop = 0.05f; // Penetration allowance
 	float percent = 0.4f; // Penetration percentage to correct
-	float corr_x = (max(c.penetration - k_slop, 0.0f) / (c.A->inv_mass + c.B->inv_mass)) * c.normal_x * percent;
-	float corr_y = (max(c.penetration - k_slop, 0.0f) / (c.A->inv_mass + c.B->inv_mass)) * c.normal_y * percent;
+	float corr_x = (max(c.penetration - k_slop, 0.0f) / (A->inv_mass + B->inv_mass)) * c.normal_x * percent;
+	float corr_y = (max(c.penetration - k_slop, 0.0f) / (A->inv_mass + B->inv_mass)) * c.normal_y * percent;
 
-	c.A->px -= corr_x * c.A->inv_mass;
-	c.A->py -= corr_y * c.A->inv_mass;
-	c.B->px += corr_x * c.B->inv_mass;
-	c.B->py += corr_y * c.B->inv_mass;
+	A->px -= corr_x * A->inv_mass;
+	A->py -= corr_y * A->inv_mass;
+	B->px += corr_x * B->inv_mass;
+	B->py += corr_y * B->inv_mass;
 }
 
 void Physics::positionalCorrection(){
 	for (auto c : this->contacs){
-		contactCorrection(c);
-	}
-}
-
-void integrateForcesObject(Circle * ro){
-	if(ro->inv_mass > 0.0f){
-		ro->vy += gravity * (dt / 2.0f);
-	}
-}
-
-void integrateVelocitiesObject(Circle * ro){
-	if(ro->inv_mass > 0.0f){
-		ro->px += ro->vx * dt;
-		ro->py += ro->vy * dt;
-		integrateForcesObject(ro);
+		this->contactCorrection(c);
 	}
 }

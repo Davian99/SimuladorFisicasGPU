@@ -15,14 +15,67 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
-__global__ void kernel(Circle * o, int n) {
+__global__ void calculateContacs_Kernel(Circle * circles, int n, 
+	Collision * colls, int * n_cols) 
+{
 	int i = threadIdx.x + blockDim.x * blockIdx.x;
-	printf("I am thread %d\n", i);
 	if(i < n){
-		o[i].px += 1;
-		printf("I am thread %d, mi circle has mass = %f\n", i, o[i].mass);
+		Circle ri = circles[i];
+		for (unsigned int j = i + 1; j < n; ++j){
+			Circle rj = circles[j];
+			if(ri.inv_mass == 0.0f && rj.inv_mass == 0.0f)
+				continue;
+			Collision c;
+			c.A = i;
+			c.B = j;
+			c.normal_x = rj.px - ri.px;
+			c.normal_y = rj.py - ri.py;
+			float dist = hypot(c.normal_x, c.normal_y);
+			float suma_radius = ri.radius + rj.radius;
+			if(dist >= suma_radius)
+				continue; //Not contact
+			
+			if(dist <= EPS) {
+				c.penetration = ri.radius;
+				c.normal_x = 1.0f;
+				c.normal_y = 0.0f;
+				c.contact_x = ri.px;
+				c.contact_y = ri.py;
+			}
+			else{
+				c.penetration = suma_radius - dist;
+				c.normal_x /= dist;
+				c.normal_y /= dist;
+				c.contact_x = c.normal_x * ri.radius + ri.px;
+				c.contact_y = c.normal_y * ri.radius + ri.py;
+			}
+			int idx = atomicAdd(n_cols, 1);
+			colls[idx] = c;
+		}
 	}
-	return;
+}
+
+__global__ void integrateVelocities_Kernel(Circle * circles, int n, float gravity, float dt) {
+	int i = threadIdx.x + blockDim.x * blockIdx.x;
+	if(i < n){
+		Circle c = circles[i];
+		if(c.inv_mass > 0.0f){
+			c.px += c.vx * dt;
+			c.py += c.vy * dt;
+			c.vy += gravity * (dt / 2.0f);
+		}
+		circles[i] = c;
+	}
+}
+
+__global__ void integrateForces_Kernel(Circle * circles, int n, float gravity, float dt) {
+	int i = threadIdx.x + blockDim.x * blockIdx.x;
+	if(i < n){
+		Circle c = circles[i];
+		if(c.inv_mass > 0.0f)
+			c.vy += gravity * (dt / 2.0f);
+		circles[i] = c;
+	}
 }
 
 __global__ void print_circle_kernel(Circle * o, int n) {
@@ -34,6 +87,43 @@ __global__ void print_circle_kernel(Circle * o, int n) {
 
 __global__ void init_context_kernel() {
 	printf("Cuda context initialized!\n");
+}
+
+void GPU::calculateContact_GPU(vector<Collision> &contacts){
+	int n_cols = 0, *n_cols_GPU; 
+	cudaMalloc((void **) &n_cols_GPU, sizeof(int));
+	cudaMemcpy(n_cols_GPU, &n_cols, sizeof(int), cudaMemcpyHostToDevice);
+
+	cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->lro->size() * 30);
+
+	dim3 dimGrid(ceil((float)this->lro->size() / BLOCK));
+	dim3 dimBlock(BLOCK);
+	calculateContacs_Kernel<<<dimGrid,dimBlock>>>(circles_GPU, this->lro->size(), 
+		colls_GPU, n_cols_GPU);
+	cudaDeviceSynchronize();
+
+	cudaMemcpy(&n_cols, n_cols_GPU, sizeof(int), cudaMemcpyDeviceToHost);
+	//printf("N_COLS = %d\n", n_cols);
+	contacts.resize(n_cols);
+	cudaMemcpy(&(contacts[0]), &colls_GPU[0], 
+			sizeof(Collision) * n_cols, cudaMemcpyDeviceToHost);
+
+	cudaFree(colls_GPU);
+	cudaFree(n_cols_GPU);
+}
+
+void GPU::integrateVelocities_GPU(){
+	dim3 dimGrid(ceil((float)this->lro->size() / BLOCK));
+	dim3 dimBlock(BLOCK);
+	integrateVelocities_Kernel<<<dimGrid,dimBlock>>>(circles_GPU, this->lro->size(), gravity, dt);
+	cudaDeviceSynchronize();
+}
+
+void GPU::integrateForces_GPU(){
+	dim3 dimGrid(ceil((float)this->lro->size() / BLOCK));
+	dim3 dimBlock(BLOCK);
+	integrateForces_Kernel<<<dimGrid,dimBlock>>>(circles_GPU, this->lro->size(), gravity, dt);
+	cudaDeviceSynchronize();
 }
 
 void GPU::initializeContext(){
@@ -63,18 +153,19 @@ void GPU::update_mem(){
 
 		this->N_GPU_obj = this->lro->size();
 	}
+	this->copy_DeviceToHost();
+}
 
+void GPU::copy_HostToDevice(){
+	cudaFree(circles_GPU);
+	cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->lro->size());
+	cudaMemcpy(&circles_GPU[0], &(this->lro->vro[0]), 
+			sizeof(Circle) * this->lro->size(), cudaMemcpyHostToDevice);
+}
+
+void GPU::copy_DeviceToHost(){
 	cudaMemcpy(&(this->lro->vro[0]), &circles_GPU[0], 
 			sizeof(Circle) * this->lro->size(), cudaMemcpyDeviceToHost);
-
-	/*
-	print_circle_kernel<<<1, this->N_GPU_obj>>>(this->circles_GPU, this->N_GPU_obj);
-	cudaDeviceSynchronize();
-	for (auto p : this->lro->vro){
-		printf("Circle in (%f, %f)\n", p.px, p.py);
-	}
-	printf("FIN CIRCLES\n");
-	*/
 }
 
 GPU::GPU(){
@@ -86,31 +177,4 @@ GPU::GPU(ListCircles * list){
 	this->lro = list;
 	this->N_GPU_obj = 0;
 	this->MAX_GPU_obj = 0;
-	/*
-	int n = 10;
-	Circle *v_gpu, *v_host;
-	v_host = (Circle *)malloc(sizeof(Circle)*n);
-	for(int i = 0; i < n; ++i)
-		v_host[i] = Circle(100 * i, 100, 100, false);
-	printf("v_host[3].mass = %f\n", v_host[3].mass);
-
-	
-	//Mallocs GPU
-	cudaMalloc((void **) &v_gpu, sizeof(Circle) * n);
-	//CPU -> GPU
-	cudaMemcpy(v_gpu, v_host, sizeof(Circle) * n, cudaMemcpyHostToDevice);
-	//Number of blocks and threads per block
-	dim3 dimGrid(1);
-	dim3 dimBlock(n);
-	//Kernel call
-	kernel<<<dimGrid,dimBlock>>>(v_gpu, n);
-	cudaDeviceSynchronize();
-	//GPU->CPU
-	cudaMemcpy(v_host, v_gpu, sizeof(Circle) * n, cudaMemcpyDeviceToHost);
-	printf("Circle.mass = %f\n", v_host[7].mass);
-	//Free GPU
-	cudaFree(v_gpu);
-	//Free host
-	free(v_host);
-	*/
 }

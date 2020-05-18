@@ -5,14 +5,6 @@
 
 class ListCircles;
 
-class Collision {
-	public:
-		Collision(){;}
-		Circle *A, *B;
-		float penetration, contact_x, contact_y;
-		float normal_x, normal_y;
-};
-
 class Physics {
 	private:
 		ListCircles * lro;
@@ -29,5 +21,7 @@ class Physics {
 		void solveCollisions();
 		void integrateVelocities();
 		void positionalCorrection();
+		void calculateImpulse(Collision &c);
+		void contactCorrection(Collision &c);
 };
 

@@ -124,7 +124,7 @@ void idleFunction(){
     if(scene.benchmarking && scene.frame_count == scene.bench_frames){
         scene.elapsedTime();
         scene.benchmarking = false;
-        //exit(0);
+        exit(0);
     }
     glutPostRedisplay();
     frame++;
@@ -168,7 +168,8 @@ int main(int argc, char** argv){
     srand(1); //Static seed
 
     initCosSinTables();
-
+    scene.benchmark();
     initOCL(argc, argv);
     
+
 }
