@@ -17,8 +17,8 @@ class Circle {
 		float mass, inv_mass;
 		float inertia, inv_inertia;
 
-		Circle(float x, float y, float r, bool _static);
-		Circle();
+		CUDA_HOSTDEV Circle(float x, float y, float r, bool _static);
+		CUDA_HOSTDEV Circle(){};
 		CUDA_HOSTDEV ~Circle(){};
 		void render();
 		void setStatic();

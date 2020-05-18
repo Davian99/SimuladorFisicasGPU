@@ -5,7 +5,7 @@ Scene::Scene(){
 	this->frame_count = 0;
 	this->phy = Physics(&(this->lro));
 	this->activated_physics = true;
-	this->bench_frames = 700;
+	this->bench_frames = 500;
 	this->frames_per_second = 0.0f;
 	this->addCircle(WIDTH/2, HEIGHT/2, 200, true);
 	this->addCircle(WIDTH/2, HEIGHT/2 - 350, 50, false);
@@ -42,9 +42,11 @@ void Scene::renderDefaultText(){
 	renderString(10, 48, object_count);
 	string number_collisions = "Collisions: " + to_string(this->n_collisions);
 	renderString(10, 72, number_collisions);
-
 	string frames_ps = "FPS: " + to_string(this->frames_per_second);
 	renderString(10, 96, frames_ps);
+	string gpu_on = use_gpu ? "ON" : "OFF";
+	string compute_mode = "GPU: " + gpu_on;
+	renderString(10, 120, compute_mode);
 }
 
 void Scene::reset(){
@@ -98,8 +100,8 @@ void Scene::benchmark(){
 		}
 	}
 
-	for(int x = 12; x < WIDTH - 10; x += 4){
-		for(int y = 10; y < 150; y += 4){
+	for(int x = 12; x < WIDTH - 10; x += 6){
+		for(int y = 10; y < 150; y += 6){
 			this->lro.addCircle(x, y, 2, false);
 		}
 	}

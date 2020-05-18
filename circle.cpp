@@ -19,12 +19,6 @@ Circle::Circle(float x, float y, float r, bool _static){
     //printf("Circle in (%d,%d), r=%f, m=%f, im=%f, inertia=%f\n", (int)px, (int)py, radius, mass, inv_mass, inertia);
 }
 
-Circle::Circle(){
-    this->px = 0.0f;
-    this->py = 0.0f;
-    this->radius = 0.0f;
-}
-
 void Circle::setStatic(){
     this->mass = 0.0f;
     this->inv_mass = 0.0f;

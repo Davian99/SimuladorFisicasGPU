@@ -16,7 +16,6 @@ SRC = circle.o gpu_routines.o list_circles.o main.o physics.o scene.o
 
 main: $(SRC) 
 	$(CXX) -o main  $(SRC) $(CXXFLAGS) $(LIBS) 
-	./main
 
 clean:
 	rm -f *.o main

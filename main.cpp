@@ -15,6 +15,7 @@ float cos_table[NUM_CIR_SEG];
 float sin_table[NUM_CIR_SEG];
 
 float gravity = 10.0f * 75.0f;
+bool use_gpu = true;
 int s_mul = 3;
 
 Scene scene;
@@ -64,7 +65,7 @@ void keyboard(unsigned char c, int x, int y) {
             scene.stepByStep = !scene.stepByStep;
             break; 
         case 'g':
-            //gravity = gravity ? 0.0f : 10.0f * 75.0f;
+            gravity = gravity ? 0.0f : 10.0f * 75.0f;
             break;
         case 'f':
             scene.activated_physics = !scene.activated_physics;
@@ -83,6 +84,9 @@ void keyboard(unsigned char c, int x, int y) {
             break;
         case 'w':
             scene.addWalls();
+            break;
+        case 'z':
+            use_gpu = !use_gpu;
             break;
         default:
             break;

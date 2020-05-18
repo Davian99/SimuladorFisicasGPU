@@ -1,6 +1,5 @@
 #include "main.h"
 #include "physics.h"
-#include "scene.h"
 
 void integrateVelocitiesObject(Circle * ro);
 void integrateForcesObject(Circle * ro);
@@ -12,7 +11,7 @@ Physics::Physics(ListCircles * lro){
 }
 
 void Physics::step(){
-	if(true){
+	if(use_gpu){
 		this->gpu.copy_HostToDevice();
 		this->gpu.calculateContact_GPU(this->contacs);
 		//printf("contacs.size()%d\n", contacs.size());
@@ -29,9 +28,10 @@ void Physics::step(){
 
 		this->gpu.copy_HostToDevice();
 		this->gpu.integrateVelocities_GPU();
+		
+		this->gpu.positionalCorrection_GPU();
+		//this->positionalCorrection();
 		this->gpu.copy_DeviceToHost();
-
-		this->positionalCorrection();
 		this->n_collisions = contacs.size();
 		this->contacs.clear();
 	}

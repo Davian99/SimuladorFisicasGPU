@@ -33,5 +33,5 @@ class GPU{
 		void integrateVelocities_GPU();
 		void calculateContact_GPU(vector<Collision> &contacts);
 		void solveCollisions_GPU(vector<Collision> &contacts);
-		//void positionalCorrection_GPU(vector<Collision> &contacts);
+		void positionalCorrection_GPU();
 };
