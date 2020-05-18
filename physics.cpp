@@ -2,15 +2,17 @@
 #include "physics.h"
 #include "scene.h"
 
-void integrateVelocitiesObject(RenderObject * ro);
-void integrateForcesObject(RenderObject * ro);
+void integrateVelocitiesObject(Circle * ro);
+void integrateForcesObject(Circle * ro);
 
-Physics::Physics(Scene * scene){
-	this->scene = scene;
+Physics::Physics(ListCircles * lro){
+	this->lro = lro;
+	this->gpu = GPU(lro);
 	this->gpu.initializeContext();
 }
 
 void Physics::step(){
+	this->gpu.update_mem();
 	this->calculateContacs();
 	this->integrateForces();
 	this->solveCollisions();
@@ -19,7 +21,7 @@ void Physics::step(){
 	this->contacs.clear();
 }
 
-bool calculateContacPoints(RenderObject * ri, RenderObject * rj, Collision &c){
+bool calculateContacPoints(Circle * ri, Circle * rj, Collision &c){
 	c.A = ri;
 	c.B = rj;
 	c.normal_x = rj->px - ri->px;
@@ -48,10 +50,10 @@ bool calculateContacPoints(RenderObject * ri, RenderObject * rj, Collision &c){
 }
 
 void Physics::calculateContacs(){
-	for (unsigned int i = 0; i < this->scene->lro.vro.size(); ++i){
-		RenderObject * ri = this->scene->lro.vro[i];
-		for (unsigned int j = i + 1; j < this->scene->lro.vro.size(); ++j){
-			RenderObject * rj = this->scene->lro.vro[j];
+	for (unsigned int i = 0; i < this->lro->size(); ++i){
+		Circle * ri = &(this->lro->vro[i]);
+		for (unsigned int j = i + 1; j < this->lro->size(); ++j){
+			Circle * rj = &(this->lro->vro[j]);
 			if(ri->inv_mass == 0.0f && rj->inv_mass == 0.0f)
 				continue;
 			Collision c;
@@ -59,18 +61,18 @@ void Physics::calculateContacs(){
 				this->contacs.push_back(c);
 		}
 	}
-	this->scene->n_collisions = this->contacs.size();
+	this->n_collisions = this->contacs.size();
 }
 
 void Physics::integrateForces(){
-	for (auto p : this->scene->lro.vro){
-		integrateForcesObject(p);
+	for (unsigned int i = 0; i < this->lro->size(); ++i){
+		integrateForcesObject(&(this->lro->vro[i]));
 	}
 }
 
 void calculateImpulse(Collision &c){
-	RenderObject * A = c.A;
-	RenderObject * B = c.B;
+	Circle * A = c.A;
+	Circle * B = c.B;
 	if(A->mass + B->mass < EPS) {
     	A->vx = 0.0f;
     	A->vy = 0.0f;
@@ -121,8 +123,8 @@ void Physics::solveCollisions(){
 }
 
 void Physics::integrateVelocities(){
-	for (auto p : this->scene->lro.vro){
-		integrateVelocitiesObject(p);
+	for (unsigned int i = 0; i < this->lro->size(); ++i){
+		integrateVelocitiesObject(&(this->lro->vro[i]));
 	}
 }
 
@@ -144,13 +146,13 @@ void Physics::positionalCorrection(){
 	}
 }
 
-void integrateForcesObject(RenderObject * ro){
+void integrateForcesObject(Circle * ro){
 	if(ro->inv_mass > 0.0f){
 		ro->vy += gravity * (dt / 2.0f);
 	}
 }
 
-void integrateVelocitiesObject(RenderObject * ro){
+void integrateVelocitiesObject(Circle * ro){
 	if(ro->inv_mass > 0.0f){
 		ro->px += ro->vx * dt;
 		ro->py += ro->vy * dt;

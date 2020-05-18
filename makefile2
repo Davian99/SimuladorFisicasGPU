@@ -1,0 +1,22 @@
+CXX = g++
+NVCC = nvcc
+
+CFLAGS=-O1 -I.
+CXXFLAGS=-O1 -I.
+MORECXXFLAGS=-Wno-narrowing -Wunused
+LIBS = -lcuda -lcudart -lGL -lGLU -lglut
+CUDA = -gencode arch=compute_50,code=compute_50 -gencode arch=compute_50,code=sm_50
+CU_COMP = --compile --relocatable-device-code=false
+SRC = circle.o gpu_routines.o list_render_object.o main.o physics.o scene.o
+
+%.o: %.cu
+	$(NVCC) -I -G -g -O1 -std=c++11 $(CU_COMP) $(CUDA)  -x cu -o $@ $<
+
+%.o: %.cpp
+	$(NVCC) -I -G -g -O1 -std=c++11 --compile  -x c++ -o  $@ $<
+
+main: $(SRC) 
+	$(NVCC) --cudart static $(LIBS) --relocatable-device-code=false $(CUDA) -link -o  "main" $(SRC)
+
+clean:
+	rm -f *.o main

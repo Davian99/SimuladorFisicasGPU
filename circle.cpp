@@ -1,5 +1,5 @@
 #include "main.h"
-#include "render_object.h"
+#include "circle.h"
 
 Circle::Circle(float x, float y, float r, bool _static){
 	this->px = x;

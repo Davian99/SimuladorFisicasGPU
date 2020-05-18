@@ -1,7 +1,7 @@
 #pragma once
 
 #include "main.h"
-#include "list_render_object.h"
+#include "list_circles.h"
 #include "physics.h"
 
 #include <chrono>
@@ -17,7 +17,7 @@ class Scene {
 	public:
 		int frame_count, n_collisions;
 		int bench_frames;
-		ListRenderObject lro;
+		ListCircles lro;
 		float frames_per_second;
 		bool activated_physics, stepByStep, static_circles = false;
 		bool benchmarking = false;

@@ -9,6 +9,9 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir.mk
+
+OS_SUFFIX := $(subst Linux,linux,$(subst Darwin/x86_64,darwin,$(shell uname -s)/$(shell uname -m)))
+
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -24,6 +27,9 @@ endif
 ifneq ($(strip $(CXX_DEPS)),)
 -include $(CXX_DEPS)
 endif
+ifneq ($(strip $(CU_DEPS)),)
+-include $(CU_DEPS)
+endif
 ifneq ($(strip $(CPP_DEPS)),)
 -include $(CPP_DEPS)
 endif
@@ -34,6 +40,14 @@ endif
 
 -include ../makefile.defs
 
+# OpenGL+GLUT OS-specific define
+ifeq ($(shell uname -s),Darwin)
+GLUT_LIBS := -Xlinker -framework -Xlinker GLUT -Xlinker -framework -Xlinker OpenGL
+else
+GLUT_LIBS := -lGL -lGLU -lglut 
+endif
+
+
 # Add inputs and outputs from these tool invocations to the build variables 
 
 # All Target
@@ -42,16 +56,17 @@ all: Fisicas
 # Tool invocations
 Fisicas: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: GCC C++ Linker'
-	g++ -lGL -lGLU -lglut -o "Fisicas" $(OBJS) $(USER_OBJS) $(LIBS)
+	@echo 'Invoking: NVCC Linker'
+	/opt/cuda/bin/nvcc --cudart static $(GLUT_LIBS) --relocatable-device-code=false -gencode arch=compute_50,code=compute_50 -gencode arch=compute_50,code=sm_50 -link -o  "Fisicas" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) $(CC_DEPS)$(C++_DEPS)$(EXECUTABLES)$(C_UPPER_DEPS)$(CXX_DEPS)$(OBJS)$(CPP_DEPS)$(C_DEPS) Fisicas
+	-$(RM) $(CC_DEPS)$(C++_DEPS)$(EXECUTABLES)$(C_UPPER_DEPS)$(CXX_DEPS)$(OBJS)$(CU_DEPS)$(CPP_DEPS)$(C_DEPS) Fisicas
 	-@echo ' '
 
 .PHONY: all clean dependents
+.SECONDARY:
 
 -include ../makefile.targets

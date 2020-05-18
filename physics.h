@@ -1,25 +1,27 @@
 #pragma once
 
-#include "render_object.h"
+#include "circle.h"
 #include "gpu_routines.h"
 
-class Scene;
+class ListCircles;
 
 class Collision {
 	public:
 		Collision(){;}
-		RenderObject *A, *B;
+		Circle *A, *B;
 		float penetration, contact_x, contact_y;
 		float normal_x, normal_y;
 };
 
 class Physics {
 	private:
-		Scene * scene; // TODO Cambiar por listRenderObject
+		ListCircles * lro;
 		vector<Collision> contacs;
 		GPU gpu;
 	public:
-		Physics(Scene * scene);
+		int n_collisions;
+
+		Physics(ListCircles * lro);
 		Physics(){;};
 		void step();
 		void calculateContacs();

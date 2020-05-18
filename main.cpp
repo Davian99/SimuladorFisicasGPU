@@ -6,7 +6,6 @@
 #define ESC_KEY 27
 #define SPC_KEY 32
 
-void timer(int);
 void keyboard(unsigned char c, int x, int y);
 void mouse(int button, int state, int x, int y);
 void mousePosition( int x, int y);
@@ -42,9 +41,11 @@ void specialInput(int key, int x, int y){
 }
 
 void keyboard(unsigned char c, int x, int y) {
-	int char_value = c - '0';
-	if(char_value > 0 && char_value < 10)
-		scene.addCircle(x, y, char_value*s_mul, scene.static_circles);
+    int char_value = c - '0';
+    if(char_value > 0 && char_value < 10){
+        scene.addCircle(x, y, char_value*s_mul, scene.static_circles);
+        return;
+    }
     switch(c){
         case 'b':
             scene.benchmark();
@@ -63,7 +64,7 @@ void keyboard(unsigned char c, int x, int y) {
             scene.stepByStep = !scene.stepByStep;
             break; 
         case 'g':
-            gravity = gravity ? 0.0f : 10.0f * 75.0f;
+            //gravity = gravity ? 0.0f : 10.0f * 75.0f;
             break;
         case 'f':
             scene.activated_physics = !scene.activated_physics;
@@ -82,6 +83,7 @@ void keyboard(unsigned char c, int x, int y) {
             break;
         case 'w':
             scene.addWalls();
+            break;
         default:
             break;
     }
@@ -89,25 +91,25 @@ void keyboard(unsigned char c, int x, int y) {
 
 void mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON) {
-    	if (state == GLUT_DOWN){
-    		scene.addCircle(x, y, 3 + rand() % 27, scene.static_circles);
-    	}
+        if (state == GLUT_DOWN){
+            scene.addCircle(x, y, 3 + rand() % 27, scene.static_circles);
+        }
     }
 
     if ((button == 3) || (button == 4)) {
         if (state == GLUT_UP) 
-       		return; // Disregard redundant GLUT_UP events
+            return; // Disregard redundant GLUT_UP events
         if(button == 3){
-        	;//UP
+            ;//UP
         }
         else{
-        	;//DOWN
+            ;//DOWN
         }
-   	}
+    }
 }
 
 void mousePosition(int x, int y) {
-	scene.upddateMousePos(x, y);
+    scene.upddateMousePos(x, y);
 }
 
 void render(void) {
@@ -136,9 +138,9 @@ void idleFunction(){
 }
 
 void initOCL(int argc, char** argv){
-	glutInit(&argc, argv);
+    glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-    glutInitWindowPosition(100, 100);
+    glutInitWindowPosition(600, 100);
     glutInitWindowSize(WIDTH, HEIGHT);
     glutCreateWindow("Only Circles");
 
@@ -162,11 +164,11 @@ void initCosSinTables(){
 }
 
 int main(int argc, char** argv){
-
+    
     srand(1); //Static seed
 
     initCosSinTables();
 
-	initOCL(argc, argv);
+    initOCL(argc, argv);
     
 }

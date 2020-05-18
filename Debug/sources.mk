@@ -2,6 +2,7 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
+CU_SRCS := 
 C_UPPER_SRCS := 
 CXX_SRCS := 
 C++_SRCS := 
@@ -18,6 +19,7 @@ EXECUTABLES :=
 C_UPPER_DEPS := 
 CXX_DEPS := 
 OBJS := 
+CU_DEPS := 
 CPP_DEPS := 
 C_DEPS := 
 

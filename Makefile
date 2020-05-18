@@ -4,9 +4,9 @@ NVCC = nvcc
 CFLAGS=-O3 -I.
 CXXFLAGS=-O3 -I.
 MORECXXFLAGS=-Wno-narrowing -Wunused
-LIBS = -lpng -lm -lcudart -lGL -lGLU -lglut
+LIBS = -lcuda -lcudart -lGL -lGLU -lglut
 
-SRC = main.o circle.o scene.o list_render_object.o physics.o gpu_routines.o
+SRC = circle.o gpu_routines.o list_circles.o main.o physics.o scene.o
 
 %.o: %.cu
 	$(NVCC) $(CFLAGS) -c -o $@ $<

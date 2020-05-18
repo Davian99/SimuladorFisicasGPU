@@ -3,10 +3,11 @@
 Scene::Scene(){
 	this->n_collisions = 0;
 	this->frame_count = 0;
-	this->phy = Physics(this);
+	this->phy = Physics(&(this->lro));
 	this->activated_physics = true;
 	this->bench_frames = 300;
 	this->frames_per_second = 0.0f;
+	this->addCircle(100, 100, 100, false);
 }
 
 void Scene::render(){
@@ -19,6 +20,7 @@ void Scene::render(){
 		this->phy.step();
 		stepByStep = false;
 	}
+	this->n_collisions = this->phy.n_collisions;
 	this->lro.renderAll();
 	this->renderDefaultText();
 }
