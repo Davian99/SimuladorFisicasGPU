@@ -15,6 +15,81 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
    }
 }
 
+__global__ void solveCollisions_Kernel(Circle * circles, int n, 
+	Collision * colls, int * n_cols, int iterations, float gravity, float dt) 
+{
+	int idx = threadIdx.x + blockDim.x * blockIdx.x;
+
+	if(idx < (*n_cols)){
+		Collision c = colls[idx];
+		Circle A = circles[c.A];
+		Circle B = circles[c.B];
+		//printf("A(%f,%f), B(%f,%f)\n", A.px, A.py, B.px, B.py);
+		float Avx = A.vx, Avy = A.vy, AvA = A.angularVelocity;
+		float Bvx = B.vx, Bvy = B.vy, BvA = B.angularVelocity;
+		for (int i = 0; i < iterations; ++i){
+			if(A.mass + B.mass < EPS) {
+		    	Avx = 0.0f;
+		    	Avy = 0.0f;
+		    	Bvx = 0.0f;
+		    	Bvy = 0.0f;
+		    	continue;
+		  	}
+
+		  	float rax = c.contact_x - A.px;
+		  	float ray = c.contact_y - A.py;
+		  	float rbx = c.contact_x - B.px;
+		  	float rby = c.contact_y - B.py;
+
+		  	//printf("Iter %d: rax=%f, ray=%f, rbx=%f, rby=%f\n", i, rax, ray, rbx, rby);
+
+		  	float rvx = Bvx - (BvA * rby) - Avx + (AvA * ray); //ERROR POSIBLE
+		  	float rvy = Bvy + (BvA * rbx) - Avy - (AvA * rax);
+
+		  	float contact_vel = rvx * c.normal_x + rvy * c.normal_y;
+		  	//printf("Iter %d: rvx=%f, rvy=%f, contact_vel=%f\n", i, rvx, rvy, contact_vel);
+		    if(contact_vel > 0.0f)
+		    	continue;
+
+		  	float raCrossN = (rax * c.normal_y) - (ray * c.normal_x);
+		  	float rbCrossN = (rbx * c.normal_y) - (rby * c.normal_x);
+
+		  	float invMassSum = A.inv_mass + B.inv_mass + raCrossN*raCrossN * A.inv_inertia + rbCrossN*rbCrossN * B.inv_inertia; 
+		  	
+		  	float e = 0.2f;
+		  	if((rvx * rvx + rvy * rvy) < ((dt * gravity * dt * gravity) + EPS))
+		  		e = 0.0f;
+		  	//printf("Iter %d: raCrossN=%f, rbCrossN=%f, contact_vel=%f, e=%f\n", i, raCrossN, rbCrossN, invMassSum,e);
+		  	
+		  	float j = -(1.0f + e) * contact_vel;
+		  	j /= invMassSum;
+
+		  	float impulse_x = c.normal_x * j;
+		  	float impulse_y = c.normal_y * j;
+
+		  	//printf("Iter %d: impulse_x=%f, impulse_y=%f, j=%f\n", i, impulse_x, impulse_y, j);
+
+		  	Avx += A.inv_mass * (-impulse_x);
+    		Avy += A.inv_mass * (-impulse_y);
+    		AvA += A.inv_inertia * ((rax * (-impulse_y)) - (ray * (-impulse_x)));
+
+		  	Bvx += B.inv_mass * (impulse_x);
+    		Bvy += B.inv_mass * (impulse_y);
+    		BvA += B.inv_inertia * ((rbx * (impulse_y)) - (rby * (impulse_x)));
+
+    		//printf("Iter %d: A.vx =%f, A.vy=%f, A.aV=%f\n", i, A.vx, A.vy, A.angularVelocity);
+    		//printf("Iter %d: B.vx =%f, B.vy=%f, B.aV=%f\n", i, B.vx, B.vy, B.angularVelocity);
+		}
+		atomicAdd(&circles[c.A].vx, (Avx - A.vx));
+		atomicAdd(&circles[c.A].vy, (Avy - A.vy));
+		atomicAdd(&circles[c.A].angularVelocity, (AvA - A.angularVelocity));
+
+		atomicAdd(&circles[c.B].vx, (Bvx - B.vx));
+		atomicAdd(&circles[c.B].vy, (Bvy - B.vy));
+		atomicAdd(&circles[c.B].angularVelocity, (BvA - B.angularVelocity));
+	}
+}
+
 __global__ void calculateContacs_Kernel(Circle * circles, int n, 
 	Collision * colls, int * n_cols) 
 {
@@ -89,27 +164,46 @@ __global__ void init_context_kernel() {
 	printf("Cuda context initialized!\n");
 }
 
+void GPU::solveCollisions_GPU(vector<Collision> &contacts){
+
+	dim3 dimGrid(ceil((float)this->n_cols / BLOCK));
+	dim3 dimBlock(BLOCK);
+	solveCollisions_Kernel<<<dimGrid,dimBlock>>>(circles_GPU, this->lro->size(), 
+		colls_GPU, this->n_cols_GPU, iterations, gravity, dt);
+	cudaDeviceSynchronize();
+	/*
+	contacts.resize(n_cols);
+	cudaMemcpy(&(contacts[0]), &colls_GPU[0], 
+			sizeof(Collision) * this->n_cols, cudaMemcpyDeviceToHost);
+
+	cudaFree(colls_GPU);
+	cudaFree(n_cols_GPU);
+	*/
+}
+
 void GPU::calculateContact_GPU(vector<Collision> &contacts){
-	int n_cols = 0, *n_cols_GPU; 
-	cudaMalloc((void **) &n_cols_GPU, sizeof(int));
-	cudaMemcpy(n_cols_GPU, &n_cols, sizeof(int), cudaMemcpyHostToDevice);
+	this->n_cols = 0; 
+	cudaMalloc((void **) &this->n_cols_GPU, sizeof(int));
+	cudaMemcpy(this->n_cols_GPU, &this->n_cols, sizeof(int), cudaMemcpyHostToDevice);
 
 	cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->lro->size() * 30);
 
 	dim3 dimGrid(ceil((float)this->lro->size() / BLOCK));
 	dim3 dimBlock(BLOCK);
 	calculateContacs_Kernel<<<dimGrid,dimBlock>>>(circles_GPU, this->lro->size(), 
-		colls_GPU, n_cols_GPU);
+		colls_GPU, this->n_cols_GPU);
 	cudaDeviceSynchronize();
 
-	cudaMemcpy(&n_cols, n_cols_GPU, sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&this->n_cols, this->n_cols_GPU, sizeof(int), cudaMemcpyDeviceToHost);
 	//printf("N_COLS = %d\n", n_cols);
+	
 	contacts.resize(n_cols);
 	cudaMemcpy(&(contacts[0]), &colls_GPU[0], 
-			sizeof(Collision) * n_cols, cudaMemcpyDeviceToHost);
-
+			sizeof(Collision) * this->n_cols, cudaMemcpyDeviceToHost);
+	
 	cudaFree(colls_GPU);
 	cudaFree(n_cols_GPU);
+	
 }
 
 void GPU::integrateVelocities_GPU(){

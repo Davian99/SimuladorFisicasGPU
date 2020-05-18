@@ -5,8 +5,10 @@ Scene::Scene(){
 	this->frame_count = 0;
 	this->phy = Physics(&(this->lro));
 	this->activated_physics = true;
-	this->bench_frames = 100;
+	this->bench_frames = 700;
 	this->frames_per_second = 0.0f;
+	this->addCircle(WIDTH/2, HEIGHT/2, 200, true);
+	this->addCircle(WIDTH/2, HEIGHT/2 - 350, 50, false);
 }
 
 void Scene::render(){
@@ -96,8 +98,8 @@ void Scene::benchmark(){
 		}
 	}
 
-	for(int x = 12; x < WIDTH - 10; x += 3){
-		for(int y = 10; y < 150; y += 3){
+	for(int x = 12; x < WIDTH - 10; x += 4){
+		for(int y = 10; y < 150; y += 4){
 			this->lro.addCircle(x, y, 2, false);
 		}
 	}

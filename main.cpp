@@ -168,8 +168,6 @@ int main(int argc, char** argv){
     srand(1); //Static seed
 
     initCosSinTables();
-    scene.benchmark();
+    //scene.benchmark();
     initOCL(argc, argv);
-    
-
 }

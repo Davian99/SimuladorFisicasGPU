@@ -24,6 +24,7 @@ void Physics::step(){
 		this->gpu.integrateForces_GPU();
 		this->gpu.copy_DeviceToHost();
 
+		//this->gpu.solveCollisions_GPU(this->contacs);
 		this->solveCollisions();
 
 		this->gpu.copy_HostToDevice();

@@ -22,6 +22,7 @@ class GPU{
 		Circle * circles_GPU;
 		Collision * colls_GPU;
 	public:
+		int n_cols, *n_cols_GPU;
 		GPU(ListCircles * list);
 		GPU();
 		void initializeContext();
@@ -31,4 +32,6 @@ class GPU{
 		void integrateForces_GPU();
 		void integrateVelocities_GPU();
 		void calculateContact_GPU(vector<Collision> &contacts);
+		void solveCollisions_GPU(vector<Collision> &contacts);
+		//void positionalCorrection_GPU(vector<Collision> &contacts);
 };
