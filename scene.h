@@ -10,12 +10,12 @@ class Scene {
 
 	private:
 		int mx, my;
-		int max_collisions;
+		unsigned int max_collisions;
 		steady_clock::time_point begin;
 		Physics phy;
 
 	public:
-		int frame_count, n_collisions;
+		unsigned int frame_count, n_collisions;
 		int bench_frames;
 		ListCircles lro;
 		float frames_per_second;

@@ -8,6 +8,7 @@ Physics::Physics(ListCircles * lro){
 	this->lro = lro;
 	this->gpu = GPU(lro);
 	this->gpu.initializeContext();
+	this->n_collisions = 0;
 }
 
 void Physics::step(){
@@ -134,7 +135,7 @@ void Physics::calculateImpulse(Collision &c){
 
 void Physics::solveCollisions(){
 	if(random_solve_cols)
-		random_shuffle(this->contacs.begin(), this->contacs.end());
+		random_shuffle(this->contacs.begin(), this->contacs.end()); //More natural simulation
 	for (int i = 0; i < iterations; ++i){
 		for (int j = 0; j < this->contacs.size(); ++j){
 			this->calculateImpulse(this->contacs[j]);

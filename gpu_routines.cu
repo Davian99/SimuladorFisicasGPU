@@ -16,7 +16,7 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 }
 
 __global__ void positionalCorrection_Kernel(Circle * circles, int n, 
-	Collision * colls, int * n_cols) 
+	Collision * colls, unsigned int * n_cols) 
 {
 	int idx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -39,7 +39,7 @@ __global__ void positionalCorrection_Kernel(Circle * circles, int n,
 }
 
 __global__ void solveCollisions_Kernel(Circle * circles, int n, 
-	Collision * colls, int * n_cols, int iterations, float gravity, float dt) 
+	Collision * colls, unsigned int * n_cols, int iterations, float gravity, float dt) 
 {
 	int idx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -96,7 +96,7 @@ __global__ void solveCollisions_Kernel(Circle * circles, int n,
 }
 
 __global__ void calculateContacs_Kernel(Circle * circles, int n, 
-	Collision * colls, int * n_cols) 
+	Collision * colls, unsigned int * n_cols) 
 {
 	int i = threadIdx.x + blockDim.x * blockIdx.x;
 	int bloc = blockDim.x * blockIdx.x;
@@ -121,14 +121,19 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 			Collision c;
 			c.A = i;
 			c.B = j + k;
-			c.normal_x = rj.px - ri.px;
-			c.normal_y = rj.py - ri.py;
+			//c.normal_x = rj.px - ri.px;
+			//c.normal_y = rj.py - ri.py;
+			c.normal_x = __fsub_rd(rj.px, ri.px);
+			c.normal_y = __fsub_rd(rj.py, ri.py);
+
 			float dist = hypotf(c.normal_x, c.normal_y);
-			float suma_radius = ri.radius + rj.radius;
+			float inv_dist = __frcp_rd(dist);
+			//float suma_radius = ri.radius + rj.radius;
+			float suma_radius = __fadd_rd(ri.radius, rj.radius);
 			if(dist >= suma_radius)
 				continue; //Not contact
 			
-			if(dist <= EPS) {
+			if(dist < EPS) {
 				c.penetration = ri.radius;
 				c.normal_x = 1.0f;
 				c.normal_y = 0.0f;
@@ -136,13 +141,21 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 				c.contact_y = ri.py;
 			}
 			else{
-				c.penetration = suma_radius - dist;
-				c.normal_x /= dist;
-				c.normal_y /= dist;
-				c.contact_x = c.normal_x * ri.radius + ri.px;
-				c.contact_y = c.normal_y * ri.radius + ri.py;
+				//c.penetration = suma_radius - dist;
+				c.penetration = __fsub_rd(suma_radius, dist);
+				//c.normal_x /= dist;
+				//c.normal_y /= dist;
+				c.normal_x = __fmul_rd(c.normal_x, inv_dist);
+				c.normal_y = __fmul_rd(c.normal_y, inv_dist);
+				//c.contact_x = c.normal_x * ri.radius + ri.px;
+				//c.contact_y = c.normal_y * ri.radius + ri.py;
+				c.contact_x = __fmaf_rd(c.normal_x, ri.radius, ri.px);
+				c.contact_y = __fmaf_rd(c.normal_y, ri.radius, ri.py);
 			}
-			int idx = atomicAdd(n_cols, 1);
+			//int idx = *n_cols;
+			//(*n_cols)++;
+
+			int idx = atomicInc(n_cols, 1e9); //Faster than atomicAdd(n_cols, 1)??
 			colls[idx] = c;
 		}
 	}
@@ -208,7 +221,7 @@ void GPU::solveCollisions_GPU(vector<Collision> &contacts){
 void GPU::calculateContact_GPU(vector<Collision> &contacts){
 	this->n_cols = 0; 
 	
-	cudaMemset(this->n_cols_GPU, 0, sizeof(int));
+	cudaMemset(this->n_cols_GPU, 0, sizeof(unsigned int));
 	
 	if(this->lro->size() >= this->MAX_cols_GPU){
 		cudaFree(colls_GPU);
@@ -223,7 +236,7 @@ void GPU::calculateContact_GPU(vector<Collision> &contacts){
 		colls_GPU, this->n_cols_GPU);
 	cudaDeviceSynchronize();
 
-	cudaMemcpy(&this->n_cols, this->n_cols_GPU, sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&this->n_cols, this->n_cols_GPU, sizeof(unsigned int), cudaMemcpyDeviceToHost);
 	//printf("N_COLS = %d\n", n_cols);
 	
 	contacts.resize(n_cols);
@@ -248,11 +261,19 @@ void GPU::integrateForces_GPU(){
 void GPU::initializeContext(){
 	//cudaFree(0);
 	initialize_Kernel<<<1,1>>>();
-	printf("Cuda context initialized!\n");
+	
 	//Create in GPU to save cudaMalloc's
 	cudaMalloc((void **) &this->n_cols_GPU, sizeof(int));
 	//hello<<<1,1>>>();
 	//cudaDeviceSynchronize();
+
+	int device;
+	cudaGetDevice(&device);
+	cudaDeviceProp props;
+	cudaGetDeviceProperties(&props, device);
+
+	printf("Cuda context initialized in device: \"%s\"\n", props.name);
+	cudaDeviceSynchronize();
 	return;
 }
 

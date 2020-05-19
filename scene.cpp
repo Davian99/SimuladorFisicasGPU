@@ -93,6 +93,9 @@ void Scene::addWalls(){
 
 	for(int posx = 0; posx <= WIDTH; posx += 20)
 		this->lro.addCircle(WIDTH+99, posx, 100, true);
+
+	for(int posx = 0; posx <= WIDTH; posx += 10)
+		this->lro.addCircle(posx, 0-99, 100, true);
 }
 
 void Scene::normalDistribution(){

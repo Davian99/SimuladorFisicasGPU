@@ -23,7 +23,7 @@ class GPU{
 		Circle * circles_GPU;
 		Collision * colls_GPU;
 	public:
-		int n_cols, *n_cols_GPU;
+		unsigned int n_cols, *n_cols_GPU;
 		GPU(ListCircles * list);
 		GPU();
 		~GPU();

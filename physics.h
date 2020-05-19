@@ -11,10 +11,12 @@ class Physics {
 		vector<Collision> contacs;
 		GPU gpu;
 	public:
-		int n_collisions;
+		unsigned int n_collisions;
 
 		Physics(ListCircles * lro);
-		Physics(){;};
+		Physics(){
+			this->n_collisions = 0;
+		};
 		void step();
 		void calculateContacs();
 		void integrateForces();
