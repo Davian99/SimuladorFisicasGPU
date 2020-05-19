@@ -49,7 +49,7 @@ void keyboard(unsigned char c, int x, int y) {
     }
     switch(c){
         case 'b':
-            scene.benchmark();
+            scene.benchmark(8);
             break;
         case 'n':
             scene.reset();
@@ -168,10 +168,43 @@ void initCosSinTables(){
 }
 
 int main(int argc, char** argv){
-    
-    srand(1); //Static seed
 
+    srand(1); //Static seed
     initCosSinTables();
-    //scene.benchmark();
-    initOCL(argc, argv);
+
+    if(argc > 1){
+        switch (argv[1][1]){
+            case 'c':
+                use_gpu = false;
+                break;
+            case 'g':
+                use_gpu = true;
+                break;
+            default:
+                use_gpu = true;
+                break;
+        }
+    }
+
+    if(argc > 2){
+        switch (argv[2][1]){
+            case 'b':{
+                int sep = 8;
+                if(argc > 3)
+                    sep = atoi(argv[3]);
+                scene.benchmark(sep);
+                scene.no_ogl();
+                break;
+            }
+            default:
+                initOCL(argc, argv);
+                break;
+        }
+    }
+    else{
+        initOCL(argc, argv);
+    }
+    
+    
+    
 }

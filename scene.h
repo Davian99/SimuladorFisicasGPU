@@ -30,6 +30,7 @@ class Scene {
 		void reset();
 		void addWalls();
 		void normalDistribution();
-		void benchmark();
+		void benchmark(int sep);
 		void elapsedTime();
+		void no_ogl();
 };

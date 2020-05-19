@@ -11,6 +11,19 @@ Scene::Scene(){
 	this->addCircle(WIDTH/2, HEIGHT/2 - 350, 50, false);
 }
 
+void Scene::no_ogl(){
+	printf("Initialize No OpenGL mode\n");
+	while(true){
+		if(this->benchmarking && this->frame_count == this->bench_frames){
+	        this->elapsedTime();
+	        this->benchmarking = false;
+	        exit(0);
+	    }
+		this->frame_count++;
+		this->phy.step();
+	}
+}
+
 void Scene::render(){
 	if(activated_physics){
 		this->frame_count++;
@@ -42,11 +55,11 @@ void Scene::renderDefaultText(){
 	renderString(10, 48, object_count);
 	string number_collisions = "Collisions: " + to_string(this->n_collisions);
 	renderString(10, 72, number_collisions);
-	string frames_ps = "FPS: " + to_string(this->frames_per_second);
-	renderString(10, 96, frames_ps);
+	string frames_ps = to_string((int)round(this->frames_per_second));
+	renderString(770, 24, frames_ps);
 	string gpu_on = use_gpu ? "ON" : "OFF";
 	string compute_mode = "GPU: " + gpu_on;
-	renderString(10, 120, compute_mode);
+	renderString(10, 96, compute_mode);
 }
 
 void Scene::reset(){
@@ -88,7 +101,7 @@ void Scene::normalDistribution(){
 	}
 }
 
-void Scene::benchmark(){
+void Scene::benchmark(int sep){
 	this->benchmarking = true;
 	this->reset();
 	this->addWalls();
@@ -100,8 +113,8 @@ void Scene::benchmark(){
 		}
 	}
 
-	for(int x = 12; x < WIDTH - 10; x += 6){
-		for(int y = 10; y < 150; y += 6){
+	for(int x = 12; x < WIDTH - 10; x += sep){
+		for(int y = 10; y < 150; y += sep){
 			this->lro.addCircle(x, y, 2, false);
 		}
 	}
