@@ -18,6 +18,7 @@ class Collision {
 class GPU{
 	private:
 		int N_GPU_obj, MAX_GPU_obj;
+		int MAX_cols_GPU;
 		ListCircles * lro;
 		Circle * circles_GPU;
 		Collision * colls_GPU;
@@ -25,8 +26,8 @@ class GPU{
 		int n_cols, *n_cols_GPU;
 		GPU(ListCircles * list);
 		GPU();
+		~GPU();
 		void initializeContext();
-		void update_mem();
 		void copy_HostToDevice();
 		void copy_DeviceToHost();
 		void integrateForces_GPU();

@@ -4,13 +4,13 @@
 #include "list_circles.h"
 #include "physics.h"
 
-#include <chrono>
 using namespace std::chrono;
 
 class Scene {
 
 	private:
 		int mx, my;
+		int max_collisions;
 		steady_clock::time_point begin;
 		Physics phy;
 
@@ -20,7 +20,7 @@ class Scene {
 		ListCircles lro;
 		float frames_per_second;
 		bool activated_physics, stepByStep, static_circles = false;
-		bool benchmarking = false;
+		bool benchmarking, render_extra;
 		
 		Scene();
 		void render();

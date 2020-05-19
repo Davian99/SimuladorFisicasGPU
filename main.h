@@ -7,6 +7,9 @@
 #include <time.h>
 #include <string>
 #include <cstring>
+#include <chrono>
+#include <unistd.h>
+#include <algorithm>
 
 #include <GL/glut.h> 
 
@@ -22,9 +25,13 @@ const float fps = 60.0f;
 const float dt = 1.0f / fps;
 const float density = 1.0f;
 
+extern int s_mul;
+extern int separation;
+
 extern float gravity;
 extern bool use_gpu;
-const unsigned int iterations = 10;
+extern bool random_solve_cols;
+const unsigned int iterations = 6;
 
 extern float cos_table[NUM_CIR_SEG];
 extern float sin_table[NUM_CIR_SEG];

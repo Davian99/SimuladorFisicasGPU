@@ -14,8 +14,8 @@ class Circle {
 		float vx, vy;
 		float force_x, force_y;
 		float angularVelocity;
-		float mass, inv_mass;
-		float inertia, inv_inertia;
+		float inv_mass;
+		float inv_inertia;
 
 		CUDA_HOSTDEV Circle(float x, float y, float r, bool _static);
 		CUDA_HOSTDEV Circle(){};

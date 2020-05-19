@@ -1,8 +1,7 @@
 #include "main.h"
 #include "scene.h"
 
-#include <chrono>
-
+#define TAB_KEY 9
 #define ESC_KEY 27
 #define SPC_KEY 32
 
@@ -16,7 +15,9 @@ float sin_table[NUM_CIR_SEG];
 
 float gravity = 10.0f * 75.0f;
 bool use_gpu = true;
+bool random_solve_cols = false;
 int s_mul = 3;
+int separation = 8;
 
 Scene scene;
 
@@ -33,23 +34,32 @@ void specialInput(int key, int x, int y){
             s_mul = max(s_mul, 1);
             break;
         case GLUT_KEY_LEFT:
-            //do something here
+            separation--;
+            separation = max(separation, 1);
+            if(scene.benchmarking)
+                scene.benchmark(separation);
             break;
         case GLUT_KEY_RIGHT:
-            //do something here
+            separation++;
+            if(scene.benchmarking)
+                scene.benchmark(separation);
             break;
     }
 }
 
 void keyboard(unsigned char c, int x, int y) {
+    //printf("%d\n", c);
     int char_value = c - '0';
     if(char_value > 0 && char_value < 10){
         scene.addCircle(x, y, char_value*s_mul, scene.static_circles);
         return;
     }
     switch(c){
+        case TAB_KEY:
+            scene.render_extra = !scene.render_extra;
+            break;
         case 'b':
-            scene.benchmark(8);
+            scene.benchmark(separation);
             break;
         case 'n':
             scene.reset();
@@ -62,6 +72,7 @@ void keyboard(unsigned char c, int x, int y) {
             scene.static_circles = !scene.static_circles;
             break;
         case SPC_KEY:
+            scene.activated_physics = false;
             scene.stepByStep = !scene.stepByStep;
             break; 
         case 'g':
@@ -73,14 +84,11 @@ void keyboard(unsigned char c, int x, int y) {
         case ESC_KEY:
             exit(0);
             break;
-        case 'c':
-            scene.addCircle(x, y, 25, scene.static_circles);
-            break;
         case 'r':
             scene.reset();
             break;
         case 's':
-            save_screenshot("/images/frame" + to_string(scene.frame_count), WIDTH, HEIGHT);
+            save_screenshot("frame" + to_string(scene.frame_count) + ".tga", WIDTH, HEIGHT);
             break;
         case 'w':
             scene.addWalls();
@@ -127,8 +135,8 @@ void render(void) {
 void idleFunction(){
     if(scene.benchmarking && scene.frame_count == scene.bench_frames){
         scene.elapsedTime();
-        scene.benchmarking = false;
-        exit(0);
+        //scene.benchmarking = false;
+        //exit(0);
     }
     glutPostRedisplay();
     frame++;
@@ -172,39 +180,53 @@ int main(int argc, char** argv){
     srand(1); //Static seed
     initCosSinTables();
 
-    if(argc > 1){
-        switch (argv[1][1]){
+    int opt, i = 1;
+    while ((opt = getopt(argc, argv, "cgbhr")) != -1) {
+        switch (opt) {
+            case 'r':
+                random_solve_cols = true;
+                break;
             case 'c':
                 use_gpu = false;
                 break;
             case 'g':
                 use_gpu = true;
                 break;
-            default:
-                use_gpu = true;
-                break;
-        }
-    }
-
-    if(argc > 2){
-        switch (argv[2][1]){
             case 'b':{
-                int sep = 8;
-                if(argc > 3)
-                    sep = atoi(argv[3]);
-                scene.benchmark(sep);
-                scene.no_ogl();
+                    if(argc > i+1)
+                        separation = atoi(argv[i+1]);
+                    //printf("sep=%d, argv[%d]=%s\n", sep, i+1, argv[i+1]);
+                    scene.benchmark(separation);
+                    scene.no_ogl();
+                    break;
+                }
+           
+            case 'h':
+                printf("Physics Simulator launch guide:\n");
+                printf(" -g for GPU MODE\n");
+                printf(" -c for CPU MODE\n");
+                printf(" -b for benchmark mode (only simulation)\n");
+                printf("     Add separation Integer after -b for heavier benchmarking)\n");
+                printf("\nPhysics Simulator use guide:\n");
+                printf(" - '1' to '9' to create a circle\n");
+                printf(" - 'b' initiate benchmark\n");
+                printf(" - 'r' reset all\n");
+                printf(" - 'n' for reset\n");
+                printf(" - 'm' for create static circles (press again to revert)\n");
+                printf(" - 'f' stop or continue simulation\n");
+                printf(" - 'space' step by step simulation\n");
+                printf(" - 'g' enable or disable gravity\n");
+                printf(" - 's' save screenshot\n");
+                printf(" - 'w' add walls to scene\n");
+                printf(" - 'z' change between GPU and CPU mode\n");
                 break;
-            }
             default:
-                initOCL(argc, argv);
-                break;
+                printf("%d\n", opt);
+                break;  
         }
+        i++;
     }
-    else{
-        initOCL(argc, argv);
-    }
-    
-    
-    
+    //If no benchmark mode, initiate OpenGL
+    initOCL(argc, argv);    
+    return 0;
 }

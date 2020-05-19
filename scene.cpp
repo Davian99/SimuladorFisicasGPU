@@ -2,24 +2,31 @@
 
 Scene::Scene(){
 	this->n_collisions = 0;
+	this->max_collisions = 0;
 	this->frame_count = 0;
 	this->phy = Physics(&(this->lro));
 	this->activated_physics = true;
-	this->bench_frames = 500;
+	this->bench_frames = 300;
+	this->benchmarking = false;
+	this->render_extra = false;
 	this->frames_per_second = 0.0f;
-	this->addCircle(WIDTH/2, HEIGHT/2, 200, true);
+	this->reset();
+	
 	this->addCircle(WIDTH/2, HEIGHT/2 - 350, 50, false);
+	this->addCircle(WIDTH/2, HEIGHT/2, 200, true);
 }
 
 void Scene::no_ogl(){
 	printf("Initialize No OpenGL mode\n");
 	while(true){
-		if(this->benchmarking && this->frame_count == this->bench_frames){
+		if(this->frame_count == this->bench_frames){
 	        this->elapsedTime();
-	        this->benchmarking = false;
 	        exit(0);
 	    }
+	    this->n_collisions = this->phy.n_collisions;
+		this->max_collisions = max(this->max_collisions, this->n_collisions);
 		this->frame_count++;
+		//printf("Frame %d\n", this->frame_count);
 		this->phy.step();
 	}
 }
@@ -35,6 +42,7 @@ void Scene::render(){
 		stepByStep = false;
 	}
 	this->n_collisions = this->phy.n_collisions;
+	this->max_collisions = max(this->max_collisions, this->n_collisions);
 	this->lro.renderAll();
 	this->renderDefaultText();
 }
@@ -60,11 +68,20 @@ void Scene::renderDefaultText(){
 	string gpu_on = use_gpu ? "ON" : "OFF";
 	string compute_mode = "GPU: " + gpu_on;
 	renderString(10, 96, compute_mode);
+	if(this->render_extra){
+		string circle_mul = "MUL: " + to_string(s_mul);
+		renderString(150, 24, circle_mul);
+		string separation_s = "SEP: " + to_string(separation);
+		renderString(150, 48, separation_s);
+	}
 }
 
 void Scene::reset(){
+	this->benchmarking = false;
 	this->frame_count = 0;
 	this->lro.clear();
+	//s_mul = 3;
+	//separation = 8;
 }
 
 void Scene::addWalls(){
@@ -102,8 +119,9 @@ void Scene::normalDistribution(){
 }
 
 void Scene::benchmark(int sep){
-	this->benchmarking = true;
 	this->reset();
+	this->benchmarking = true;
+	//this->end_after_bench =
 	this->addWalls();
 	bool shift = true;
 	for(int posy = 185; posy <= HEIGHT - 150; posy += 30){
@@ -127,6 +145,8 @@ void Scene::elapsedTime(){
 	float seconds = microseconds.count() / 1000000.0f;
 	printf("Benchmark with %d frames completed in %f seconds giving FPS = %f\n", 
 		this->bench_frames, seconds, this->bench_frames / seconds);
+	printf("Max number of collisions: %d\n", this->max_collisions);
+	printf("Object count: %d\n", this->lro.size());
 }
 
 float pixelsTo(float px){

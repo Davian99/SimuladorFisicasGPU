@@ -14,12 +14,7 @@ void Physics::step(){
 	if(use_gpu){
 		this->gpu.copy_HostToDevice();
 		this->gpu.calculateContact_GPU(this->contacs);
-		//printf("contacs.size()%d\n", contacs.size());
-		//this->contacs.clear();
-		//this->calculateContacs();
-		//this->gpu.copy_DeviceToHost();
 
-		//this->gpu.copy_HostToDevice();
 		this->gpu.integrateForces_GPU();
 		this->gpu.copy_DeviceToHost();
 
@@ -32,7 +27,8 @@ void Physics::step(){
 		this->gpu.positionalCorrection_GPU();
 		//this->positionalCorrection();
 		this->gpu.copy_DeviceToHost();
-		this->n_collisions = contacs.size();
+		this->n_collisions = this->gpu.n_cols;
+		//printf("%d\n", this->n_collisions);
 		this->contacs.clear();
 	}
 	else{
@@ -102,13 +98,6 @@ void Physics::integrateForces(){
 void Physics::calculateImpulse(Collision &c){
 	Circle * A = &(this->lro->vro[c.A]);
 	Circle * B = &(this->lro->vro[c.B]);
-	if(A->mass + B->mass < EPS) {
-    	A->vx = 0.0f;
-    	A->vy = 0.0f;
-    	B->vx = 0.0f;
-    	B->vy = 0.0f;
-    	return;
-  	}
 
   	float rax = c.contact_x - A->px;
   	float ray = c.contact_y - A->py;
@@ -144,9 +133,11 @@ void Physics::calculateImpulse(Collision &c){
 }
 
 void Physics::solveCollisions(){
+	if(random_solve_cols)
+		random_shuffle(this->contacs.begin(), this->contacs.end());
 	for (int i = 0; i < iterations; ++i){
-		for (auto c : this->contacs){
-			this->calculateImpulse(c);
+		for (int j = 0; j < this->contacs.size(); ++j){
+			this->calculateImpulse(this->contacs[j]);
 		}
 	}
 }

@@ -27,8 +27,9 @@ __global__ void positionalCorrection_Kernel(Circle * circles, int n,
 
 		float k_slop = 0.05f; // Penetration allowance
 		float percent = 0.4f; // Penetration percentage to correct
-		float corr_x = (max(c.penetration - k_slop, 0.0f) / (A.inv_mass + B.inv_mass)) * c.normal_x * percent;
-		float corr_y = (max(c.penetration - k_slop, 0.0f) / (A.inv_mass + B.inv_mass)) * c.normal_y * percent;
+		float corr_aux = (max(c.penetration - k_slop, 0.0f) / (A.inv_mass + B.inv_mass));
+		float corr_x = corr_aux * c.normal_x * percent;
+		float corr_y = corr_aux * c.normal_y * percent;
 
 		atomicAdd(&circles[c.A].px, (-1.0f) * (corr_x * A.inv_mass));
 		atomicAdd(&circles[c.A].py, (-1.0f) * (corr_y * A.inv_mass));
@@ -48,14 +49,6 @@ __global__ void solveCollisions_Kernel(Circle * circles, int n,
 		Circle B = circles[c.B];
 		float Avx = A.vx, Avy = A.vy, AvA = A.angularVelocity;
 		float Bvx = B.vx, Bvy = B.vy, BvA = B.angularVelocity;
-
-		if(A.mass + B.mass < EPS) {
-	    	A.vx = 0.0f;
-	    	A.vy = 0.0f;
-	    	B.vx = 0.0f;
-	    	B.vy = 0.0f;
-	    	return;
-	  	}
 
 	  	float rax = c.contact_x - A.px;
 	  	float ray = c.contact_y - A.py;
@@ -130,7 +123,7 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 			c.B = j + k;
 			c.normal_x = rj.px - ri.px;
 			c.normal_y = rj.py - ri.py;
-			float dist = hypot(c.normal_x, c.normal_y);
+			float dist = hypotf(c.normal_x, c.normal_y);
 			float suma_radius = ri.radius + rj.radius;
 			if(dist >= suma_radius)
 				continue; //Not contact
@@ -178,15 +171,8 @@ __global__ void integrateForces_Kernel(Circle * circles, int n, float gravity, f
 	}
 }
 
-__global__ void print_circle_kernel(Circle * o, int n) {
-	int i = threadIdx.x + blockDim.x * blockIdx.x;
-	if(i < n){
-		printf("Circle[%d] in (%f, %f)\n", i, o[i].px, o[i].py);
-	}
-}
-
-__global__ void init_context_kernel() {
-	printf("Cuda context initialized!\n");
+__global__ void initialize_Kernel() {
+	printf("GPU initialized\n");
 }
 
 void GPU::positionalCorrection_GPU(){
@@ -197,12 +183,11 @@ void GPU::positionalCorrection_GPU(){
 		colls_GPU, this->n_cols_GPU);
 	cudaDeviceSynchronize();
 
-	cudaFree(colls_GPU);
-	cudaFree(n_cols_GPU);
+	//cudaFree(colls_GPU);
+	//cudaFree(n_cols_GPU);
 }
 
 void GPU::solveCollisions_GPU(vector<Collision> &contacts){
-
 	dim3 dimGrid(ceil((float)this->n_cols / BLOCK));
 	dim3 dimBlock(BLOCK);
 	for(int i = 0; i < iterations; ++i){
@@ -222,10 +207,15 @@ void GPU::solveCollisions_GPU(vector<Collision> &contacts){
 
 void GPU::calculateContact_GPU(vector<Collision> &contacts){
 	this->n_cols = 0; 
-	cudaMalloc((void **) &this->n_cols_GPU, sizeof(int));
-	cudaMemcpy(this->n_cols_GPU, &this->n_cols, sizeof(int), cudaMemcpyHostToDevice);
-
-	cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->lro->size() * 30);
+	
+	cudaMemset(this->n_cols_GPU, 0, sizeof(int));
+	
+	if(this->lro->size() >= this->MAX_cols_GPU){
+		cudaFree(colls_GPU);
+		this->MAX_cols_GPU = this->lro->size() * 2;
+		cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->MAX_cols_GPU * 30);
+	}
+	//cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->lro->size() * 30);
 
 	dim3 dimGrid(ceil((float)this->lro->size() / BLOCK));
 	dim3 dimBlock(BLOCK);
@@ -239,10 +229,6 @@ void GPU::calculateContact_GPU(vector<Collision> &contacts){
 	contacts.resize(n_cols);
 	cudaMemcpy(&(contacts[0]), &colls_GPU[0], 
 			sizeof(Collision) * this->n_cols, cudaMemcpyDeviceToHost);
-	/*
-	cudaFree(colls_GPU);
-	cudaFree(n_cols_GPU);
-	*/
 }
 
 void GPU::integrateVelocities_GPU(){
@@ -260,38 +246,24 @@ void GPU::integrateForces_GPU(){
 }
 
 void GPU::initializeContext(){
-	//Initialize cuda contex
-	init_context_kernel<<<1,1>>>();
-	cudaDeviceSynchronize();
-}
-
-void GPU::update_mem(){
-	if(true || this->lro->size() > this->N_GPU_obj){
-		//Hay objetos que faltan en GPU
-		int init = 0;//this->N_GPU_obj;
-		int num_copy = this->lro->size();// - this->N_GPU_obj;
-		if(this->lro->size() > this->MAX_GPU_obj){ //Si no caben en GPU
-			init = 0;
-			num_copy = this->lro->size();
-			this->MAX_GPU_obj = 2 * this->lro->size();
-
-			cudaFree(circles_GPU); //Liberamos la memoria existente
-			cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->MAX_GPU_obj);
-		}
-
-		//CPU -> GPU
-		//printf("COPIADO desde %d con n = %d\n", init, num_copy);
-		cudaMemcpy(&circles_GPU[init], &(this->lro->vro[init]), 
-			sizeof(Circle) * num_copy, cudaMemcpyHostToDevice);
-
-		this->N_GPU_obj = this->lro->size();
-	}
-	this->copy_DeviceToHost();
+	//cudaFree(0);
+	initialize_Kernel<<<1,1>>>();
+	printf("Cuda context initialized!\n");
+	//Create in GPU to save cudaMalloc's
+	cudaMalloc((void **) &this->n_cols_GPU, sizeof(int));
+	//hello<<<1,1>>>();
+	//cudaDeviceSynchronize();
+	return;
 }
 
 void GPU::copy_HostToDevice(){
-	cudaFree(circles_GPU);
-	cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->lro->size());
+	if(this->lro->size() >= this->MAX_GPU_obj){
+		cudaFree(circles_GPU);
+		this->MAX_GPU_obj = 2 * this->lro->size();
+		cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->MAX_GPU_obj);
+	}
+	//cudaFree(circles_GPU);
+	//cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->lro->size());
 	cudaMemcpy(&circles_GPU[0], &(this->lro->vro[0]), 
 			sizeof(Circle) * this->lro->size(), cudaMemcpyHostToDevice);
 }
@@ -302,12 +274,29 @@ void GPU::copy_DeviceToHost(){
 }
 
 GPU::GPU(){
-	this->N_GPU_obj = 0;
+	this->N_GPU_obj = -1;
 	this->MAX_GPU_obj = 0;
+	this->MAX_cols_GPU = 0;
 }
 
 GPU::GPU(ListCircles * list){
 	this->lro = list;
 	this->N_GPU_obj = 0;
 	this->MAX_GPU_obj = 0;
+	this->MAX_cols_GPU = 0;
+}
+
+GPU::~GPU(){
+	if(colls_GPU != 0){
+		cudaFree(colls_GPU);
+		cudaFree(n_cols_GPU);
+		cudaFree(circles_GPU);
+	}
+	//printf("%d\n", n_cols_GPU);
+	//printf("%d\n", circles_GPU);
+	//if(n_cols_GPU != 0)	
+	//	cudaFree(n_cols_GPU);
+	//if(circles_GPU != 0)
+	//	cudaFree(circles_GPU);
+
 }

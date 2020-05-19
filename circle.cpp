@@ -11,18 +11,18 @@ Circle::Circle(float x, float y, float r, bool _static){
     if(_static)
         this->setStatic();
     else{
-        this->mass = PI * r * r * density;
+        float mass = PI * r * r * density;
         this->inv_mass = 1.0f / mass;
-        this->inertia = mass * r * r;
+        float inertia = mass * r * r;
         this->inv_inertia = 1.0f / inertia;
     }
     //printf("Circle in (%d,%d), r=%f, m=%f, im=%f, inertia=%f\n", (int)px, (int)py, radius, mass, inv_mass, inertia);
 }
 
 void Circle::setStatic(){
-    this->mass = 0.0f;
+    //this->mass = 0.0f;
     this->inv_mass = 0.0f;
-    this->inertia = 0.0f;
+    //this->inertia = 0.0f;
     this->inv_inertia = 0.0f;
 }
 
