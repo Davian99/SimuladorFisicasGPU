@@ -41,6 +41,7 @@ void Scene::render(){
 		this->phy.step();
 		stepByStep = false;
 	}
+	this->spawnAll();
 	this->n_collisions = this->phy.n_collisions;
 	this->max_collisions = max(this->max_collisions, this->n_collisions);
 	this->lro.renderAll();
@@ -80,6 +81,7 @@ void Scene::reset(){
 	this->benchmarking = false;
 	this->frame_count = 0;
 	this->lro.clear();
+	this->spawners.clear();
 	//s_mul = 3;
 	//separation = 8;
 }
@@ -150,6 +152,20 @@ void Scene::elapsedTime(){
 		this->bench_frames, seconds, this->bench_frames / seconds);
 	printf("Max number of collisions: %d\n", this->max_collisions);
 	printf("Object count: %d\n", this->lro.size());
+}
+
+void Scene::addSpawner(int x, int y, int tam){
+	printf("Added spawner in (%d, %d) with size %d\n", x, y, tam);
+	spawners.push_back({{x, y}, tam});
+}
+
+void Scene::spawnAll(){
+	for(int i = 0; i < spawners.size(); ++i){
+		int x = spawners[i].first.first;
+		int y = spawners[i].first.second;
+		int size = spawners[i].second;
+		this->addCircle(x, y, size, false);
+	}
 }
 
 float pixelsTo(float px){

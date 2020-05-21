@@ -5,7 +5,7 @@
 #include <cuda.h>
 
 #define BLOCK 32
-#define N_COL 20
+#define N_COL 30
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true){
@@ -226,9 +226,9 @@ void GPU::calculateContact_GPU(vector<Collision> &contacts){
 	if(this->lro->size() >= this->MAX_cols_GPU){
 		cudaFree(colls_GPU);
 		this->MAX_cols_GPU = this->lro->size() * 2;
-		cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->MAX_cols_GPU * 30);
+		cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->MAX_cols_GPU * N_COL);
 	}
-	//cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->lro->size() * 30);
+	//cudaMalloc((void **) &colls_GPU, sizeof(Collision) * this->lro->size() * N_COL);
 
 	dim3 dimGrid(ceil((float)this->lro->size() / BLOCK));
 	dim3 dimBlock(BLOCK);

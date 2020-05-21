@@ -51,7 +51,13 @@ void keyboard(unsigned char c, int x, int y) {
     //printf("%d\n", c);
     int char_value = c - '0';
     if(char_value > 0 && char_value < 10){
-        scene.addCircle(x, y, char_value*s_mul, scene.static_circles);
+        int mod = glutGetModifiers();
+        if(mod == GLUT_ACTIVE_ALT){
+            //printf("SHIFT + %d\n", char_value);
+            scene.addSpawner(x, y, char_value*s_mul);
+        }
+        else
+            scene.addCircle(x, y, char_value*s_mul, scene.static_circles);
         return;
     }
     switch(c){

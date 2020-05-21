@@ -12,7 +12,10 @@ class Scene {
 		int mx, my;
 		unsigned int max_collisions;
 		steady_clock::time_point begin;
+		vector<pair<pair<int, int>, int>> spawners;
 		Physics phy;
+
+		void spawnAll();
 
 	public:
 		unsigned int frame_count, n_collisions;
@@ -33,4 +36,5 @@ class Scene {
 		void benchmark(int sep);
 		void elapsedTime();
 		void no_ogl();
+		void addSpawner(int x, int y, int tam);
 };
