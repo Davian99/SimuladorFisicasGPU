@@ -15,7 +15,7 @@ float sin_table[NUM_CIR_SEG];
 
 float gravity = 10.0f * 75.0f;
 bool use_gpu = true;
-bool random_solve_cols = false;
+bool random_solve_cols = true;
 int s_mul = 3;
 int separation = 8;
 
@@ -52,7 +52,7 @@ void keyboard(unsigned char c, int x, int y) {
     int char_value = c - '0';
     if(char_value > 0 && char_value < 10){
         int mod = glutGetModifiers();
-        if(mod == GLUT_ACTIVE_ALT){
+        if(mod & GLUT_ACTIVE_ALT){
             //printf("SHIFT + %d\n", char_value);
             scene.addSpawner(x, y, char_value*s_mul);
         }
@@ -190,7 +190,7 @@ int main(int argc, char** argv){
     while ((opt = getopt(argc, argv, "cgbhr")) != -1) {
         switch (opt) {
             case 'r':
-                random_solve_cols = true;
+                random_solve_cols = false;
                 break;
             case 'c':
                 use_gpu = false;

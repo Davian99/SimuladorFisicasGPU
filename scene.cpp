@@ -155,7 +155,7 @@ void Scene::elapsedTime(){
 }
 
 void Scene::addSpawner(int x, int y, int tam){
-	printf("Added spawner in (%d, %d) with size %d\n", x, y, tam);
+	//printf("Added spawner in (%d, %d) with size %d\n", x, y, tam);
 	spawners.push_back({{x, y}, tam});
 }
 
