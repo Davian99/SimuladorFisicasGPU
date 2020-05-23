@@ -1,33 +1,34 @@
-==16624== NVPROF is profiling process 16624, command: ./main -g -r -b 3
+==1504== NVPROF is profiling process 1504, command: ./main -g -b 3
 Cuda context initialized in device: "GeForce 940MX"
 GPU initialized
 Initialize No OpenGL mode
-Benchmark with 300 frames completed in 6.846790 seconds giving FPS = 43.816154
-Max number of collisions: 84313
+Benchmark with 300 frames completed in 6.348800 seconds giving FPS = 47.253021
+Max number of collisions: 84486
 Object count: 12799
-==16624== Profiling application: ./main -g -r -b 3
-==16624== Profiling result:
+==1504== Profiling application: ./main -g -b 3
+==1504== Profiling result:
             Type  Time(%)      Time     Calls       Avg       Min       Max  Name
- GPU activities:   90.51%  3.74239s       300  12.475ms  12.354ms  12.626ms  calculateContacs_Kernel(Circle*, int, Collision*, unsigned int*)
-                    4.57%  188.96ms      1200  157.46us  1.4080us  974.31us  [CUDA memcpy DtoH]
-                    2.40%  99.376ms       600  165.63us  164.58us  210.40us  [CUDA memcpy HtoD]
-                    1.09%  45.048ms       300  150.16us  88.513us  324.90us  positionalCorrection_Kernel(Circle*, int, Collision*, unsigned int*)
-                    0.71%  29.429ms       300  98.095us  92.064us  103.01us  integrateForces_Kernel(Circle*, int, float, float)
-                    0.70%  28.793ms       300  95.977us  91.265us  101.54us  integrateVelocities_Kernel(Circle*, int, float, float)
-                    0.01%  567.27us       300  1.8900us  1.7920us  2.4320us  [CUDA memset]
-                    0.00%  81.280us         1  81.280us  81.280us  81.280us  initialize_Kernel(void)
-      API calls:   88.03%  3.97669s      1201  3.3112ms  38.188us  12.813ms  cudaDeviceSynchronize
-                    7.91%  357.45ms      1800  198.58us  13.173us  1.6013ms  cudaMemcpy
-                    3.96%  179.05ms      1201  149.09us  5.0950us  167.33ms  cudaLaunchKernel
-                    0.04%  1.8220ms         5  364.39us     619ns  1.6186ms  cudaFree
-                    0.03%  1.5153ms       300  5.0510us  3.7310us  7.7520us  cudaMemset
-                    0.01%  304.04us         3  101.35us  15.369us  181.15us  cudaMalloc
-                    0.01%  260.00us        97  2.6800us     270ns  114.27us  cuDeviceGetAttribute
-                    0.00%  171.59us         1  171.59us  171.59us  171.59us  cudaGetDeviceProperties
-                    0.00%  113.98us         1  113.98us  113.98us  113.98us  cuDeviceTotalMem
-                    0.00%  63.787us         1  63.787us  63.787us  63.787us  cuDeviceGetName
-                    0.00%  6.9300us         1  6.9300us  6.9300us  6.9300us  cuDeviceGetPCIBusId
-                    0.00%  2.9550us         3     985ns     407ns  1.8260us  cuDeviceGetCount
-                    0.00%  1.8450us         1  1.8450us  1.8450us  1.8450us  cudaGetDevice
-                    0.00%  1.1270us         2     563ns     330ns     797ns  cuDeviceGet
-                    0.00%     512ns         1     512ns     512ns     512ns  cuDeviceGetUuid
+ GPU activities:   92.25%  3.65091s       300  12.170ms  12.068ms  12.625ms  calculateContacs_Kernel(Circle*, int, Collision*, unsigned int*)
+                    4.28%  169.19ms      1200  140.99us  1.1520us  734.24us  [CUDA memcpy DtoH]
+                    2.02%  79.860ms       600  133.10us  131.81us  214.37us  [CUDA memcpy HtoD]
+                    1.12%  44.493ms       300  148.31us  88.449us  322.37us  positionalCorrection_Kernel(Circle*, int, Collision*, unsigned int*)
+                    0.19%  7.5928ms       300  25.309us  24.448us  27.008us  integrateVelocities_Kernel(Circle*, int, float, float)
+                    0.12%  4.7505ms       300  15.834us  8.8000us  22.368us  integrateForces_Kernel(Circle*, int, float, float)
+                    0.01%  565.92us       300  1.8860us  1.8240us  2.2400us  [CUDA memset]
+                    0.00%  84.416us         1  84.416us  84.416us  84.416us  initialize_Kernel(void)
+      API calls:   88.58%  3.81122s      1201  3.1734ms  14.558us  12.786ms  cudaDeviceSynchronize
+                    3.86%  166.04ms      1201  138.25us  5.5510us  154.64ms  cudaLaunchKernel
+                    3.77%  162.08ms      1200  135.07us  31.289us  400.89us  cudaMemcpyAsync
+                    3.69%  158.90ms       600  264.84us  13.249us  962.77us  cudaMemcpy
+                    0.04%  1.8384ms         5  367.68us     797ns  1.6213ms  cudaFree
+                    0.03%  1.4576ms       300  4.8580us  3.6690us  9.9790us  cudaMemset
+                    0.01%  301.22us         3  100.41us  16.195us  177.71us  cudaMalloc
+                    0.01%  230.03us        97  2.3710us     231ns  102.79us  cuDeviceGetAttribute
+                    0.00%  171.91us         1  171.91us  171.91us  171.91us  cudaGetDeviceProperties
+                    0.00%  103.96us         1  103.96us  103.96us  103.96us  cuDeviceTotalMem
+                    0.00%  60.744us         1  60.744us  60.744us  60.744us  cuDeviceGetName
+                    0.00%  8.2290us         1  8.2290us  8.2290us  8.2290us  cuDeviceGetPCIBusId
+                    0.00%  2.5690us         3     856ns     307ns  1.8260us  cuDeviceGetCount
+                    0.00%  1.9010us         1  1.9010us  1.9010us  1.9010us  cudaGetDevice
+                    0.00%  1.0950us         2     547ns     276ns     819ns  cuDeviceGet
+                    0.00%     453ns         1     453ns     453ns     453ns  cuDeviceGetUuid

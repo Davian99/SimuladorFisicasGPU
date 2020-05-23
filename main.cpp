@@ -14,7 +14,9 @@ float cos_table[NUM_CIR_SEG];
 float sin_table[NUM_CIR_SEG];
 
 float gravity = 10.0f * 75.0f;
+const float calcule_e = ((dt * gravity * dt * gravity) + EPS);
 bool use_gpu = true;
+bool remove_non_visible = false;
 bool random_solve_cols = true;
 int s_mul = 3;
 int separation = 8;
@@ -48,14 +50,11 @@ void specialInput(int key, int x, int y){
 }
 
 void keyboard(unsigned char c, int x, int y) {
-    //printf("%d\n", c);
     int char_value = c - '0';
     if(char_value > 0 && char_value < 10){
         int mod = glutGetModifiers();
-        if(mod & GLUT_ACTIVE_ALT){
-            //printf("SHIFT + %d\n", char_value);
+        if(mod & GLUT_ACTIVE_ALT)
             scene.addSpawner(x, y, char_value*s_mul);
-        }
         else
             scene.addCircle(x, y, char_value*s_mul, scene.static_circles);
         return;
@@ -95,6 +94,7 @@ void keyboard(unsigned char c, int x, int y) {
             break;
         case 's':
             save_screenshot("frame" + to_string(scene.frame_count) + ".tga", WIDTH, HEIGHT);
+            printf("Saved screenshot of frame %d\n", scene.frame_count);
             break;
         case 'w':
             scene.addWalls();
@@ -187,7 +187,7 @@ int main(int argc, char** argv){
     initCosSinTables();
 
     int opt, i = 1;
-    while ((opt = getopt(argc, argv, "cgbhr")) != -1) {
+    while ((opt = getopt(argc, argv, "cgbhrd")) != -1) {
         switch (opt) {
             case 'r':
                 random_solve_cols = false;
@@ -206,28 +206,31 @@ int main(int argc, char** argv){
                     scene.no_ogl();
                     break;
                 }
+            case 'd':
+                remove_non_visible = true;
+                break;
            
             case 'h':
                 printf("Physics Simulator launch guide:\n");
                 printf(" -g for GPU MODE\n");
                 printf(" -c for CPU MODE\n");
+                printf(" -d to delete non visible objects\n");
                 printf(" -b for benchmark mode (only simulation)\n");
                 printf("     Add separation Integer after -b for heavier benchmarking)\n");
                 printf("\nPhysics Simulator use guide:\n");
                 printf(" - '1' to '9' to create a circle\n");
-                printf(" - 'b' initiate benchmark\n");
-                printf(" - 'r' reset all\n");
-                printf(" - 'n' for reset\n");
+                printf(" - 'b' initiate [b]enchmark\n");
+                printf(" - 'r' [r]eset all\n");
+                printf(" - 'n' [n]ormal distribution scenario\n");
                 printf(" - 'm' for create static circles (press again to revert)\n");
                 printf(" - 'f' stop or continue simulation\n");
                 printf(" - 'space' step by step simulation\n");
-                printf(" - 'g' enable or disable gravity\n");
-                printf(" - 's' save screenshot\n");
-                printf(" - 'w' add walls to scene\n");
+                printf(" - 'g' enable or disable [g]ravity\n");
+                printf(" - 's' [s]creenshot\n");
+                printf(" - 'w' add [w]alls to scene\n");
                 printf(" - 'z' change between GPU and CPU mode\n");
                 break;
             default:
-                printf("%d\n", opt);
                 break;  
         }
         i++;

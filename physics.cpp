@@ -13,6 +13,7 @@ Physics::Physics(ListCircles * lro){
 
 void Physics::step(){
 	if(use_gpu){
+		//if(this->lro->size() > gpu.circlesInGPU())
 		this->gpu.copy_HostToDevice();
 		this->gpu.calculateContact_GPU(this->contacs);
 
@@ -26,11 +27,11 @@ void Physics::step(){
 		this->gpu.integrateVelocities_GPU();
 		
 		this->gpu.positionalCorrection_GPU();
-		//this->positionalCorrection();
 		this->gpu.copy_DeviceToHost();
+
 		this->n_collisions = this->gpu.n_cols;
 		//printf("%d\n", this->n_collisions);
-		this->contacs.clear();
+		//this->contacs.clear();
 	}
 	else{
 		this->calculateContacs();
@@ -119,11 +120,11 @@ void Physics::calculateImpulse(Collision &c){
   	float invMassSum = A->inv_mass + B->inv_mass + raCrossN*raCrossN * A->inv_inertia + rbCrossN*rbCrossN * B->inv_inertia; 
   	
   	float e = 0.2f;
-  	if((rvx * rvx + rvy * rvy) < ((dt * gravity * dt * gravity) + EPS))
+  	if((rvx * rvx + rvy * rvy) < calcule_e)
   		e = 0.0f;
 
-  	float j = -(1.0f + e) * contact_vel;
-  	j /= invMassSum;
+  	float j = (-(1.0f + e) * contact_vel) / invMassSum;
+  	//j /= invMassSum;
 
   	float impulse_x = c.normal_x * j;
   	float impulse_y = c.normal_y * j;

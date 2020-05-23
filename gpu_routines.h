@@ -35,4 +35,5 @@ class GPU{
 		void calculateContact_GPU(vector<Collision> &contacts);
 		void solveCollisions_GPU(vector<Collision> &contacts);
 		void positionalCorrection_GPU();
+		int circlesInGPU();
 };

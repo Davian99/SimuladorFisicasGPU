@@ -12,7 +12,6 @@ class Circle {
 	public:
 		float px, py, radius;
 		float vx, vy;
-		float force_x, force_y;
 		float angularVelocity;
 		float inv_mass;
 		float inv_inertia;

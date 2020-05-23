@@ -26,10 +26,10 @@ __global__ void positionalCorrection_Kernel(Circle * circles, int n,
 		Circle B = circles[c.B];
 
 		float k_slop = 0.05f; // Penetration allowance
-		float percent = 0.4f; // Penetration percentage to correct
-		float corr_aux = (max(c.penetration - k_slop, 0.0f) / (A.inv_mass + B.inv_mass));
-		float corr_x = corr_aux * c.normal_x * percent;
-		float corr_y = corr_aux * c.normal_y * percent;
+		//float percent = 0.4f; // Penetration percentage to correct
+		float corr_aux = 0.4f * (max(c.penetration - k_slop, 0.0f) / (A.inv_mass + B.inv_mass));
+		float corr_x = corr_aux * c.normal_x;
+		float corr_y = corr_aux * c.normal_y;
 
 		atomicAdd(&circles[c.A].px, (-1.0f) * (corr_x * A.inv_mass));
 		atomicAdd(&circles[c.A].py, (-1.0f) * (corr_y * A.inv_mass));
@@ -99,46 +99,58 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 	Collision * colls, unsigned int * n_cols) 
 {
 	int i = threadIdx.x + blockDim.x * blockIdx.x;
+	int tid = threadIdx.x;
 	int bloc = blockDim.x * blockIdx.x;
 
 	__shared__ Circle sh_Circles[BLOCK];
-	Circle ri;
-	if(i < n)
-		ri = circles[i];
+	//Circle ri;
+	Collision c;
+	float ripx, ripy, riinv_mass, riradius;
+	float rjpx, rjpy, rjinv_mass, rjradius;
+	if(i < n){
+		//ri = circles[i];
+		ripx = circles[i].px;
+		ripy = circles[i].py;
+		riinv_mass = circles[i].inv_mass;
+		riradius = circles[i].radius;
+	}
 
 	for (unsigned int j = bloc; j < n; j += BLOCK){
-		if(j + threadIdx.x < n)
-			sh_Circles[threadIdx.x] = circles[j + threadIdx.x];
+		if(j + tid < n)
+			sh_Circles[tid] = circles[j + tid];
 
 		__syncthreads();
 
 		for(int k = 0; k < BLOCK && j + k < n; ++k){
 			if(j + k <= i)
 				continue;
-			Circle rj = sh_Circles[k];
-			if(ri.inv_mass == 0.0f && rj.inv_mass == 0.0f)
+			//Circle rj = sh_Circles[k];
+			rjpx = sh_Circles[k].px;
+			rjpy = sh_Circles[k].py;
+			rjinv_mass = sh_Circles[k].inv_mass;
+			rjradius = sh_Circles[k].radius;
+			if(riinv_mass == 0.0f && rjinv_mass == 0.0f)
 				continue;
-			Collision c;
 			c.A = i;
 			c.B = j + k;
 			//c.normal_x = rj.px - ri.px;
 			//c.normal_y = rj.py - ri.py;
-			c.normal_x = __fsub_rd(rj.px, ri.px);
-			c.normal_y = __fsub_rd(rj.py, ri.py);
+			c.normal_x = __fsub_rd(rjpx, ripx);
+			c.normal_y = __fsub_rd(rjpy, ripy);
 
 			float dist = hypotf(c.normal_x, c.normal_y);
 			float inv_dist = __frcp_rd(dist);
 			//float suma_radius = ri.radius + rj.radius;
-			float suma_radius = __fadd_rd(ri.radius, rj.radius);
+			float suma_radius = __fadd_rd(riradius, rjradius);
 			if(dist >= suma_radius)
 				continue; //Not contact
 			
 			if(dist < EPS) {
-				c.penetration = ri.radius;
+				c.penetration = riradius;
 				c.normal_x = 1.0f;
 				c.normal_y = 0.0f;
-				c.contact_x = ri.px;
-				c.contact_y = ri.py;
+				c.contact_x = ripx;
+				c.contact_y = ripy;
 			}
 			else{
 				//c.penetration = suma_radius - dist;
@@ -149,8 +161,8 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 				c.normal_y = __fmul_rd(c.normal_y, inv_dist);
 				//c.contact_x = c.normal_x * ri.radius + ri.px;
 				//c.contact_y = c.normal_y * ri.radius + ri.py;
-				c.contact_x = __fmaf_rd(c.normal_x, ri.radius, ri.px);
-				c.contact_y = __fmaf_rd(c.normal_y, ri.radius, ri.py);
+				c.contact_x = __fmaf_rd(c.normal_x, riradius, ripx);
+				c.contact_y = __fmaf_rd(c.normal_y, riradius, ripy);
 			}
 			//int idx = *n_cols;
 			//(*n_cols)++;
@@ -158,29 +170,31 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 			int idx = atomicInc(n_cols, 1e9); //Faster than atomicAdd(n_cols, 1)??
 			colls[idx] = c;
 		}
+
+		__syncthreads();
 	}
 }
 
 __global__ void integrateVelocities_Kernel(Circle * circles, int n, float gravity, float dt) {
 	int i = threadIdx.x + blockDim.x * blockIdx.x;
 	if(i < n){
-		Circle c = circles[i];
-		if(c.inv_mass > 0.0f){
-			c.px += c.vx * dt;
-			c.py += c.vy * dt;
-			c.vy += gravity * (dt / 2.0f);
+		//Circle c = circles[i]; its faster with more global reads??
+		if(circles[i].inv_mass > 0.0f){
+			circles[i].px += circles[i].vx * dt;
+			circles[i].py += circles[i].vy * dt;
+			circles[i].vy += gravity * (dt / 2.0f);
 		}
-		circles[i] = c;
+		//circles[i] = c;
 	}
 }
 
 __global__ void integrateForces_Kernel(Circle * circles, int n, float gravity, float dt) {
 	int i = threadIdx.x + blockDim.x * blockIdx.x;
 	if(i < n){
-		Circle c = circles[i];
-		if(c.inv_mass > 0.0f)
-			c.vy += gravity * (dt / 2.0f);
-		circles[i] = c;
+		//Circle c = circles[i];
+		if(circles[i].inv_mass > 0.0f)
+			circles[i].vy += gravity * (dt / 2.0f);
+		//circles[i] = c;
 	}
 }
 
@@ -237,7 +251,6 @@ void GPU::calculateContact_GPU(vector<Collision> &contacts){
 	cudaDeviceSynchronize();
 
 	cudaMemcpy(&this->n_cols, this->n_cols_GPU, sizeof(unsigned int), cudaMemcpyDeviceToHost);
-	//printf("N_COLS = %d\n", n_cols);
 	
 	contacts.resize(n_cols);
 	cudaMemcpy(&(contacts[0]), &colls_GPU[0], 
@@ -285,13 +298,18 @@ void GPU::copy_HostToDevice(){
 	}
 	//cudaFree(circles_GPU);
 	//cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->lro->size());
-	cudaMemcpy(&circles_GPU[0], &(this->lro->vro[0]), 
+	cudaMemcpyAsync(&circles_GPU[0], &(this->lro->vro[0]), 
 			sizeof(Circle) * this->lro->size(), cudaMemcpyHostToDevice);
+	this->N_GPU_obj = this->lro->size();
 }
 
 void GPU::copy_DeviceToHost(){
-	cudaMemcpy(&(this->lro->vro[0]), &circles_GPU[0], 
+	cudaMemcpyAsync(&(this->lro->vro[0]), &circles_GPU[0], 
 			sizeof(Circle) * this->lro->size(), cudaMemcpyDeviceToHost);
+}
+
+int GPU::circlesInGPU(){
+	return this->N_GPU_obj;
 }
 
 GPU::GPU(){

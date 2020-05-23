@@ -35,11 +35,15 @@ void Scene::render(){
 	if(activated_physics){
 		this->frame_count++;
 		this->phy.step();
+		if(remove_non_visible)
+			this->lro.removeNonVisible();
 	}
 	else if(stepByStep){
 		this->frame_count++;
 		this->phy.step();
 		stepByStep = false;
+		if(remove_non_visible)
+			this->lro.removeNonVisible();
 	}
 	this->spawnAll();
 	this->n_collisions = this->phy.n_collisions;
@@ -51,7 +55,7 @@ void Scene::render(){
 void Scene::upddateMousePos(int x, int y){
 	this->mx = x;
 	this->my = y;
-}	
+}
 
 void Scene::addCircle(int x, int y, int r, bool _static){
 	this->lro.addCircle(x, y, r, _static);
@@ -60,7 +64,7 @@ void Scene::addCircle(int x, int y, int r, bool _static){
 void Scene::renderDefaultText(){
 	string frames = "Frame: " + to_string(this->frame_count);
 	renderString(10, 24, frames);
-	string object_count = "Objects: " + to_string(this->lro.size());
+	string object_count = "Objects: " + to_string(this->lro.m_size());
 	renderString(10, 48, object_count);
 	string number_collisions = "Collisions: " + to_string(this->n_collisions);
 	renderString(10, 72, number_collisions);
@@ -73,7 +77,9 @@ void Scene::renderDefaultText(){
 		string circle_mul = "MUL: " + to_string(s_mul);
 		renderString(150, 24, circle_mul);
 		string separation_s = "SEP: " + to_string(separation);
-		renderString(150, 48, separation_s);
+		renderString(240, 24, separation_s);
+		string total_obs_s = "Total Objs: " + to_string(this->lro.size());
+		renderString(330, 24, total_obs_s);
 	}
 }
 
@@ -195,6 +201,14 @@ void glVertexC(float x, float y){
 
 float degToRad(float deg){
 	return deg * PI / 180.f;
+}
+
+float dist_center(float x, float y){
+	float x_d = x - (WIDTH/2);
+	float y_d = y - (HEIGHT/2);
+
+	float dist = hypotf(x_d, y_d);
+	return dist;
 }
 
 bool save_screenshot(string filename, int w, int h) {	

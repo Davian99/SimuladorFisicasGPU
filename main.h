@@ -25,12 +25,15 @@ const float fps = 60.0f;
 const float dt = 1.0f / fps;
 const float density = 1.0f;
 
+extern const float calcule_e;
+
 extern int s_mul;
 extern int separation;
 
 extern float gravity;
 extern bool use_gpu;
 extern bool random_solve_cols;
+extern bool remove_non_visible;
 const unsigned int iterations = 6;
 
 extern float cos_table[NUM_CIR_SEG];
@@ -42,3 +45,4 @@ float pixelsTo(float px);
 void glVertexC(float x, float y);
 float degToRad(float deg);
 bool save_screenshot(string filename, int w, int h);
+float dist_center(float x, float y);
