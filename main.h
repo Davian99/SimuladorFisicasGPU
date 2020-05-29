@@ -34,6 +34,7 @@ extern float gravity;
 extern bool use_gpu;
 extern bool random_solve_cols;
 extern bool remove_non_visible;
+extern bool render_collisions;
 const unsigned int iterations = 6;
 
 extern float cos_table[NUM_CIR_SEG];

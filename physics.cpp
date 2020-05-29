@@ -9,9 +9,14 @@ Physics::Physics(ListCircles * lro){
 	this->gpu = GPU(lro);
 	this->gpu.initializeContext();
 	this->n_collisions = 0;
+	//this->total_collisions = 0;
+	this->solve_time = 0;
 }
 
 void Physics::step(){
+	//Test which is faster
+	//if(random_solve_cols)
+	//	random_shuffle(this->lro->vro.begin(), this->lro->vro.end()); //More natural simulation
 	if(use_gpu){
 		//if(this->lro->size() > gpu.circlesInGPU())
 		this->gpu.copy_HostToDevice();
@@ -40,18 +45,36 @@ void Physics::step(){
 		this->integrateVelocities();
 		this->positionalCorrection();
 		this->contacs.clear();
-	}	
+	}
+	//this->total_collisions += this->n_collisions;
+}
+
+void Physics::renderCollisions(){
+	glPointSize(4.0f);
+
+	glBegin(GL_POINTS);
+    glColor3ub(255, 0, 0);
+    
+	for (auto c : this->contacs){
+		glVertexC(c.contact_x, c.contact_y);
+	}
+	glEnd();
 }
 
 bool calculateContacPoints(Circle * ri, Circle * rj, Collision &c){
 	c.normal_x = rj->px - ri->px;
 	c.normal_y = rj->py - ri->py;
-	float dist = hypot(c.normal_x, c.normal_y);
+
 	float suma_radius = ri->radius + rj->radius;
-	if(dist >= suma_radius)
-		return false; //Not contact
+	float squared_dist = c.normal_x * c.normal_x + c.normal_y * c.normal_y;
 	
-	if(dist <= EPS) {
+	if(squared_dist >= suma_radius * suma_radius)
+		return false; //Not contact
+
+	float dist = sqrtf(squared_dist);
+	float inv_dist = 1.0f / dist;
+	
+	if(dist < EPS) {
 		c.penetration = ri->radius;
 		c.normal_x = 1.0f;
 		c.normal_y = 0.0f;
@@ -60,8 +83,8 @@ bool calculateContacPoints(Circle * ri, Circle * rj, Collision &c){
 	}
 	else{
 		c.penetration = suma_radius - dist;
-		c.normal_x /= dist;
-		c.normal_y /= dist;
+		c.normal_x *= inv_dist;
+		c.normal_y *= inv_dist;
 		c.contact_x = c.normal_x * ri->radius + ri->px;
 		c.contact_y = c.normal_y * ri->radius + ri->py;
 	}
@@ -118,7 +141,7 @@ void Physics::calculateImpulse(Collision &c){
   	float rbCrossN = (rbx * c.normal_y) - (rby * c.normal_x);
 
   	float invMassSum = A->inv_mass + B->inv_mass + raCrossN*raCrossN * A->inv_inertia + rbCrossN*rbCrossN * B->inv_inertia; 
-  	
+
   	float e = 0.2f;
   	if((rvx * rvx + rvy * rvy) < calcule_e)
   		e = 0.0f;
@@ -129,19 +152,30 @@ void Physics::calculateImpulse(Collision &c){
   	float impulse_x = c.normal_x * j;
   	float impulse_y = c.normal_y * j;
 
-  	A->applyImpulse(-impulse_x, -impulse_y, rax, ray);
-  	B->applyImpulse(impulse_x, impulse_y, rbx, rby);
+  	A->vx += A->inv_mass * (-impulse_x);
+  	A->vy += A->inv_mass * (-impulse_y);
+  	A->angularVelocity += A->inv_inertia * ((rax * (-impulse_y)) - (ray * (-impulse_x)));
+
+	B->vx += B->inv_mass * (impulse_x);
+  	B->vy += B->inv_mass * (impulse_y);
+  	B->angularVelocity += B->inv_inertia * ((rbx * (impulse_y)) - (rby * (impulse_x)));
+
   	return;
 }
 
 void Physics::solveCollisions(){
 	if(random_solve_cols)
 		random_shuffle(this->contacs.begin(), this->contacs.end()); //More natural simulation
+	//Timing of the crucial function
+	auto start = high_resolution_clock::now();
 	for (int i = 0; i < iterations; ++i){
 		for (int j = 0; j < this->contacs.size(); ++j){
 			this->calculateImpulse(this->contacs[j]);
 		}
 	}
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<microseconds>(stop - start);
+	this->solve_time += duration.count();
 }
 
 void integrateVelocitiesObject(Circle * ro){

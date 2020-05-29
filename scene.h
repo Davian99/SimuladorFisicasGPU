@@ -19,6 +19,7 @@ class Scene {
 
 	public:
 		unsigned int frame_count, n_collisions;
+		unsigned long long total_collisions;
 		int bench_frames;
 		ListCircles lro;
 		float frames_per_second;

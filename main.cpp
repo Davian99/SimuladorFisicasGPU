@@ -16,8 +16,9 @@ float sin_table[NUM_CIR_SEG];
 float gravity = 10.0f * 75.0f;
 const float calcule_e = ((dt * gravity * dt * gravity) + EPS);
 bool use_gpu = true;
-bool remove_non_visible = false;
+bool remove_non_visible = true;
 bool random_solve_cols = true;
+bool render_collisions = false;
 int s_mul = 3;
 int separation = 8;
 
@@ -60,6 +61,12 @@ void keyboard(unsigned char c, int x, int y) {
         return;
     }
     switch(c){
+        case 'c':
+            render_collisions = !render_collisions;
+            break;
+        case 'd':
+            remove_non_visible = !remove_non_visible;
+            break;
         case TAB_KEY:
             scene.render_extra = !scene.render_extra;
             break;

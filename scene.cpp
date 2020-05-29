@@ -10,6 +10,7 @@ Scene::Scene(){
 	this->benchmarking = false;
 	this->render_extra = false;
 	this->frames_per_second = 0.0f;
+	this->total_collisions = 0;
 	this->reset();
 	
 	this->addCircle(WIDTH/2, HEIGHT/2 - 350, 50, false);
@@ -25,6 +26,7 @@ void Scene::no_ogl(){
 	    }
 	    this->n_collisions = this->phy.n_collisions;
 		this->max_collisions = max(this->max_collisions, this->n_collisions);
+		this->total_collisions += (this->lro.size() * (this->lro.size()-1)) / 2;
 		this->frame_count++;
 		//printf("Frame %d\n", this->frame_count);
 		this->phy.step();
@@ -37,6 +39,7 @@ void Scene::render(){
 		this->phy.step();
 		if(remove_non_visible)
 			this->lro.removeNonVisible();
+		this->spawnAll();
 	}
 	else if(stepByStep){
 		this->frame_count++;
@@ -44,11 +47,15 @@ void Scene::render(){
 		stepByStep = false;
 		if(remove_non_visible)
 			this->lro.removeNonVisible();
+		this->spawnAll();
 	}
-	this->spawnAll();
+	
 	this->n_collisions = this->phy.n_collisions;
+	this->total_collisions += (this->lro.size() * (this->lro.size()-1)) / 2;
 	this->max_collisions = max(this->max_collisions, this->n_collisions);
 	this->lro.renderAll();
+	if(render_collisions)
+		this->phy.renderCollisions();
 	this->renderDefaultText();
 }
 
@@ -77,9 +84,12 @@ void Scene::renderDefaultText(){
 		string circle_mul = "MUL: " + to_string(s_mul);
 		renderString(150, 24, circle_mul);
 		string separation_s = "SEP: " + to_string(separation);
-		renderString(240, 24, separation_s);
+		renderString(150, 48, separation_s);
 		string total_obs_s = "Total Objs: " + to_string(this->lro.size());
-		renderString(330, 24, total_obs_s);
+		renderString(240, 24, total_obs_s);
+		string del_on = remove_non_visible ? "ON" : "OFF";
+		string del_non_vis = "Delete non visible: " + del_on;
+		renderString(240, 48, del_non_vis);
 	}
 }
 
@@ -88,6 +98,7 @@ void Scene::reset(){
 	this->frame_count = 0;
 	this->lro.clear();
 	this->spawners.clear();
+	this->total_collisions = 0;
 	//s_mul = 3;
 	//separation = 8;
 }
@@ -157,7 +168,10 @@ void Scene::elapsedTime(){
 	printf("Benchmark with %d frames completed in %f seconds giving FPS = %f\n", 
 		this->bench_frames, seconds, this->bench_frames / seconds);
 	printf("Max number of collisions: %d\n", this->max_collisions);
+	printf("Total checked collisions: %llu, giving %.2fM collisions / s\n", 
+		this->total_collisions, this->total_collisions / (1e6 *seconds));
 	printf("Object count: %d\n", this->lro.size());
+	printf("Solve collisions time: %f\n", this->phy.solve_time / 1000000.0f);
 }
 
 void Scene::addSpawner(int x, int y, int tam){

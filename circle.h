@@ -7,8 +7,7 @@
 #endif
 
 class Circle {
-	private:
-
+	//private:
 	public:
 		float px, py, radius;
 		float vx, vy;
@@ -20,6 +19,4 @@ class Circle {
 		CUDA_HOSTDEV Circle(){};
 		CUDA_HOSTDEV ~Circle(){};
 		void render();
-		void setStatic();
-		void applyImpulse(float impulse_x, float impulse_y, float cvx, float cvy);		
 };

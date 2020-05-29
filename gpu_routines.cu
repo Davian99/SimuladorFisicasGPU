@@ -119,31 +119,37 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 		if(j + tid < n)
 			sh_Circles[tid] = circles[j + tid];
 
-		__syncthreads();
+		//__syncthreads();
 
 		for(int k = 0; k < BLOCK && j + k < n; ++k){
 			if(j + k <= i)
 				continue;
 			//Circle rj = sh_Circles[k];
+			rjinv_mass = sh_Circles[k].inv_mass;
 			rjpx = sh_Circles[k].px;
 			rjpy = sh_Circles[k].py;
-			rjinv_mass = sh_Circles[k].inv_mass;
 			rjradius = sh_Circles[k].radius;
+
 			if(riinv_mass == 0.0f && rjinv_mass == 0.0f)
 				continue;
+			
 			c.A = i;
 			c.B = j + k;
-			//c.normal_x = rj.px - ri.px;
-			//c.normal_y = rj.py - ri.py;
-			c.normal_x = __fsub_rd(rjpx, ripx);
-			c.normal_y = __fsub_rd(rjpy, ripy);
+			c.normal_x = rjpx - ripx;
+			c.normal_y = rjpy - ripy;
+			//c.normal_x = __fsub_rd(rjpx, ripx);
+			//c.normal_y = __fsub_rd(rjpy, ripy);
+			float suma_radius = riradius + rjradius;
+			//float suma_radius = __fadd_rd(riradius, rjradius);
 
-			float dist = hypotf(c.normal_x, c.normal_y);
-			float inv_dist = __frcp_rd(dist);
+			float squared_dist = c.normal_x * c.normal_x + c.normal_y * c.normal_y;
+
 			//float suma_radius = ri.radius + rj.radius;
-			float suma_radius = __fadd_rd(riradius, rjradius);
-			if(dist >= suma_radius)
+			if(squared_dist > suma_radius * suma_radius)
 				continue; //Not contact
+
+			float dist = sqrtf(squared_dist);
+			float inv_dist = __frcp_rd(dist);
 			
 			if(dist < EPS) {
 				c.penetration = riradius;
@@ -153,16 +159,16 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 				c.contact_y = ripy;
 			}
 			else{
-				//c.penetration = suma_radius - dist;
-				c.penetration = __fsub_rd(suma_radius, dist);
-				//c.normal_x /= dist;
-				//c.normal_y /= dist;
-				c.normal_x = __fmul_rd(c.normal_x, inv_dist);
-				c.normal_y = __fmul_rd(c.normal_y, inv_dist);
-				//c.contact_x = c.normal_x * ri.radius + ri.px;
-				//c.contact_y = c.normal_y * ri.radius + ri.py;
-				c.contact_x = __fmaf_rd(c.normal_x, riradius, ripx);
-				c.contact_y = __fmaf_rd(c.normal_y, riradius, ripy);
+				c.penetration = suma_radius - dist;
+				//c.penetration = __fsub_rd(suma_radius, dist);
+				c.normal_x *= inv_dist;
+				c.normal_y *= inv_dist;
+				//c.normal_x = __fmul_rd(c.normal_x, inv_dist);
+				//c.normal_y = __fmul_rd(c.normal_y, inv_dist);
+				c.contact_x = c.normal_x * riradius + ripx;
+				c.contact_y = c.normal_y * riradius + ripy;
+				//c.contact_x = __fmaf_rd(c.normal_x, riradius, ripx);
+				//c.contact_y = __fmaf_rd(c.normal_y, riradius, ripy);
 			}
 			//int idx = *n_cols;
 			//(*n_cols)++;
@@ -171,7 +177,7 @@ __global__ void calculateContacs_Kernel(Circle * circles, int n,
 			colls[idx] = c;
 		}
 
-		__syncthreads();
+		//__syncthreads();
 	}
 }
 
@@ -296,8 +302,6 @@ void GPU::copy_HostToDevice(){
 		this->MAX_GPU_obj = 2 * this->lro->size();
 		cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->MAX_GPU_obj);
 	}
-	//cudaFree(circles_GPU);
-	//cudaMalloc((void **) &circles_GPU, sizeof(Circle) * this->lro->size());
 	cudaMemcpyAsync(&circles_GPU[0], &(this->lro->vro[0]), 
 			sizeof(Circle) * this->lro->size(), cudaMemcpyHostToDevice);
 	this->N_GPU_obj = this->lro->size();

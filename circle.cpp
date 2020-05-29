@@ -8,8 +8,10 @@ Circle::Circle(float x, float y, float r, bool _static){
     this->vx = 0.0f;
     this->vy = 0.0f;
     this->angularVelocity = 0.0f;
-    if(_static)
-        this->setStatic();
+    if(_static){
+        this->inv_mass = 0.0f;
+        this->inv_inertia = 0.0f;
+    }
     else{
         float mass = PI * r * r * density;
         this->inv_mass = 1.0f / mass;
@@ -17,19 +19,6 @@ Circle::Circle(float x, float y, float r, bool _static){
         this->inv_inertia = 1.0f / inertia;
     }
     //printf("Circle in (%d,%d), r=%f, m=%f, im=%f, inertia=%f\n", (int)px, (int)py, radius, mass, inv_mass, inertia);
-}
-
-void Circle::setStatic(){
-    //this->mass = 0.0f;
-    this->inv_mass = 0.0f;
-    //this->inertia = 0.0f;
-    this->inv_inertia = 0.0f;
-}
-
-void Circle::applyImpulse(float impulse_x, float impulse_y, float cvx, float cvy){
-    this->vx += this->inv_mass * impulse_x;
-    this->vy += this->inv_mass * impulse_y;
-    this->angularVelocity += this->inv_inertia * ((cvx * impulse_y) - (cvy * impulse_x));
 }
 
 void Circle::render() {
